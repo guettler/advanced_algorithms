@@ -1,0 +1,12 @@
+#######################
+####### Rules #########
+#######################
+- All Projects will be implemented in C++.
+
+######################
+#### 1st project #####
+######################
+Task for the first project:
+- map reads with semi-global alignment (with windowing technique?) on large string
+- implement Ukkonen trick
+- compare standard vs Ukkonen vs razers3
