@@ -11,8 +11,25 @@ Task for the first project:
 - implement Ukkonen trick
 - compare standard vs Ukkonen vs razers3
 
+What we have:
+-------------
+- FASTA files
+- Genome (1 file)
+- Lots of reads
+- Read in Genome
+- Reads as vectors
+
+What we do:
+------------
+- Smith Waterman semi-global alignment (modified)
+- Using linear space (not having the whole matrix but only a part of it)
+-- Need to figure out a way to do the backtracking!!!
+- Using Ukkonen trick
+- Using RazerS (as comparison) (we need the runtime)
+- 
 
 Tips (Sandro):
+---------------
 - Avoid pointers where possible, use references (call by reference: T&ref)
 - Only read string, do not write!
 - creating dynamic programming matrix: more dimensional arrays in C++.. not helping => dynamic arrays
