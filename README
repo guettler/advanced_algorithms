@@ -10,3 +10,11 @@ Task for the first project:
 - map reads with semi-global alignment (with windowing technique?) on large string
 - implement Ukkonen trick
 - compare standard vs Ukkonen vs razers3
+
+
+Tips (Sandro):
+- Avoid pointers where possible, use references (call by reference: T&ref)
+- Only read string, do not write!
+- creating dynamic programming matrix: more dimensional arrays in C++.. not helping => dynamic arrays
+- use this: vector<vector<int>> with constructor (La, vector<int>(Lb))
+can be accessed with blub[i][j]
