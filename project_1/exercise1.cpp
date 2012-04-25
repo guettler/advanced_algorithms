@@ -3,8 +3,6 @@
  * Author: tbd
  */
 
-
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -17,8 +15,12 @@ using namespace std;
 /* Function prototypes (instead of header file)*/
 string readGenome(string &path);
 int getNrOfReads(string &path);
-
-
+void readReads(string &path, vector<string> &reads);
+void time_int(int print);
+void printVector(vector<int>  &v);
+void printTable(vector<vector<int> > &v);
+int getMaxValue(char &nucleotide1, char &nucleotide2,int &match,int &mismatch, int &gap,int &val_d, int &val_h, int &val_v);
+void semiGlobalWithout(vector<int> &scores, string &sequence, string &read);
 /* Function definitions */
 string readGenome(string &path)
 {
@@ -158,6 +160,15 @@ void time_int(int print){
   }
   t1 = t2;
 }
+
+void printVector(vector<int>  &v)
+{
+	int length = v.size();
+	for(int i=0; i<length; ++i)		
+            cout << v[i]<< " ";
+	cout << endl;
+
+}
 void printTable(vector<vector<int> > &v)
 {
 	int length = v.size();
@@ -167,7 +178,7 @@ void printTable(vector<vector<int> > &v)
 	{
 		for(int j=0; j<width; ++j)
 		{
-			cout << v[i][j];
+			cout << v[i][j]<< " ";
 		}
 		cout << endl;
 	}
@@ -217,12 +228,14 @@ void semiGlobalWithout(vector<int> &scores, string &sequence, string &read){
 
         }
 
-        scores[j-1]=dp[m][1];
+
         dp[m][0]=dp[m][1]; // last row has yet to be updated
         dp[m][1]= 0;
-    }
-    scores[n+1]=dp[m][1];
+        /* save the score after finilized the column */
+        scores[j]=dp[m][0];
 
+
+    }
 }
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
@@ -259,12 +272,12 @@ int main(int argc, char**argv) {
 //    cout<< reads.size()<<endl;
 //    cout<< reads[0]<<endl;
     /* Vector for the scores */
-//    vector<int> scores (reads[1].size()+1,0);
-//    semiGlobalWithout(scores,reads[1],reads[1]);
+    vector<int> scores (reads[1].size()+1,0);
+    semiGlobalWithout(scores,reads[1],reads[1]);
     
-    string seq1="ABCD";
-    vector<int>scores (seq1.size()+1,0);
-    semiGlobalWithout(scores,seq1,seq1);
-    cout<<scores[1]<<endl;
+//    string seq1="ABCD";
+//    vector<int>scores (seq1.size()+1,0);
+//    semiGlobalWithout(scores,seq1,seq1);
+    printVector(scores);
     return 0;
 }
