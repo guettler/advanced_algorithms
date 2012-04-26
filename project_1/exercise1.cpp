@@ -1,6 +1,6 @@
 /* 
  * File:   exercise1.cpp
- * Author: tbd
+ * Authors: Group 5
  */
 
 #include <iostream>
@@ -11,6 +11,9 @@
 #include <sys/time.h>
 
 using namespace std;
+#define match 0
+#define mismatch  1
+#define gap 1
 
 /* Function prototypes (instead of header file)*/
 string readGenome(string &path);
@@ -19,8 +22,10 @@ void readReads(string &path, vector<string> &reads);
 void time_int(int print);
 void printVector(vector<int>  &v);
 void printTable(vector<vector<int> > &v);
-int getMaxValue(char &nucleotide1, char &nucleotide2,int &match,int &mismatch, int &gap,int &val_d, int &val_h, int &val_v);
-void semiGlobalWithout(vector<int> &scores, string &sequence, string &read);
+int getMinValue(char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v);
+void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequence, string &read);
+
+
 /* Function definitions */
 string readGenome(string &path)
 {
@@ -183,7 +188,7 @@ void printTable(vector<vector<int> > &v)
 		cout << endl;
 	}
 }
-int getMaxValue(char &nucleotide1, char &nucleotide2,int &match,int &mismatch, int &gap,int &val_d, int &val_h, int &val_v){
+int getMinValue(char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v){
     int diagonal, vertical, horizontal,cell;
     if (nucleotide1==nucleotide2)
         diagonal= val_d +match;
@@ -192,19 +197,17 @@ int getMaxValue(char &nucleotide1, char &nucleotide2,int &match,int &mismatch, i
     vertical=val_v + gap;
     horizontal= val_h + gap;
     
-    cell = max(max(horizontal,vertical),diagonal);
+    cell = min(min(horizontal,vertical),diagonal);
     return(cell);
 }
 
 /* Calculates the scores of the alignment, i.e., last row of the dp-matrix*/
-void semiGlobalWithout(vector<int> &scores, string &sequence, string &read){
-    int m,n,match,mismatch,internal_gap,initial_gap;
+//void semiGlobalWithout(vector<int> &scores, vector<pair<int,int> > &pos_score, int &k, string &sequence, string &read){
+void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequence, string &read){
+    int m,n;
     m= read.size();
     n= sequence.size();
-    match=1;
-    mismatch=-1;
-    initial_gap=-1;
-    internal_gap=-2;
+
     /* Dp-matrix: a (m+1)x2 matrix initialized with 0 */
     vector<vector<int> > dp(m+1,vector<int> (2,0));
 
@@ -212,13 +215,13 @@ void semiGlobalWithout(vector<int> &scores, string &sequence, string &read){
     /* Initialize the first column -> initial gap penalty for sequence. The 
      * initial gap penalties for the reads amout to 0 */
     for (int i = 1; i <= m; i++)
-        dp[i][0] = dp[i-1][0]+ initial_gap;
+        dp[i][0] = dp[i-1][0]+ gap;
 
-    scores[0]=dp[m][0];
+//    scores[0]=dp[m][0];
     /* modified Smith-Waterman */
     for (int j = 1; j <= n ; j++) {
         for (int i = 1; i <= m; i++) {
-            dp[i][1] = getMaxValue(sequence[j-1], read[i-1],match, mismatch, internal_gap, dp[i-1][0], dp[i][0],dp[i-1][1]);
+            dp[i][1] = getMinValue(sequence[j-1], read[i-1],dp[i-1][0], dp[i][0],dp[i-1][1]);
             
             /* shift one to the right: replace the first value with the second 
              * and write 0 in the second position, same as efect as  adding a 
@@ -232,52 +235,85 @@ void semiGlobalWithout(vector<int> &scores, string &sequence, string &read){
         dp[m][0]=dp[m][1]; // last row has yet to be updated
         dp[m][1]= 0;
         /* save the score after finilized the column */
-        scores[j]=dp[m][0];
-
-
+//        scores[j]=dp[m][0]; // probably we do not need to save all scores, but only the ones <=k, see next line
+        
+        /* save column position and score if it is less/equal k */
+        if (dp[m][0]<=k){
+            pos_score.push_back(make_pair(j,dp[m][0]));
+            cout<<"Occurence were found!"<<endl;
+        }
+        cout<<"Iteration nr: "<<j <<endl;
     }
+    cout<<"Procedure 'semiGlobalWithout' done!" <<endl;
 }
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
     time_int(0); // start timing
+    string genome_file, reads_file;
+    int k, ukkonen_on;
+    
     // Prints welcome message...
     cout << "Welcome ..." << endl;
-
+    
+    /* --- read the arguments. To be uncomment for the final version ----  */
     // Prints arguments...
-    if (argc > 1) {
-        cout << endl << "Arguments:" << endl;
-        for (int i = 1; i < argc; i++) {
-            cout << i << ": " << argv[i] << endl;
-        }
-    }
-    string genome_file = argv[1];
-    string reads_file = argv[2];
-    int k = atoi(argv[3]); // number of errors
-    int ukkonen_on = atoi(argv[4]); // indicates wheter the ukkonen trick will be used or not
+//    if (argc > 1) {
+//        cout << endl << "Arguments:" << endl;
+//        for (int i = 1; i < argc; i++) {
+//            cout << i << ": " << argv[i] << endl;
+//        }
+//    }
+//    genome_file = argv[1];
+//    reads_file = argv[2];
+//    k = atoi(argv[3]); // number of errors
+//    ukkonen_on = atoi(argv[4]); // indicates whether the ukkonen trick will be used or not
+    /* --------------------- end of block ----------------------------------*/
     
-//    cout << genome_file[2]<< endl;
+    /* ------ Input block for the working phase.------------------------------ 
+     * -------To be erased before checking -----*/
+    string fileNames[]={"random10M.fasta","random10M_reads50_100.fasta","random10M_reads50_1k.fasta",
+    "random10M_reads100_100.fasta","random10M_reads100_1k.fasta",
+    "random10M_reads400_100.fasta","random10M_reads400_1k.fasta"}; // 7 given test files
     
+    genome_file=fileNames[0];
+    reads_file=fileNames[6];
+    k=3;
+    ukkonen_on=0;
+    /* ------------------------------------------------------------------------*/
+
+    
+    
+    /* Read fasta files*/
     string genome = readGenome(genome_file);
     int m = getNrOfReads(reads_file);
-    cout << m<<endl;
-
     vector<string> reads(m, "" );
 //    vector<string> reads;// other way without m (does not work perfectly...)
     readReads(reads_file, reads);
-  
     
-    time_int(1); // print out elapsed time
+    cout <<"Nr. of Reads: "<< m<<endl;
+    cout <<"1st sequence's size: "<< genome.size()<<endl;
+    cout <<"2nd sequence's size: "<< reads[0].size()<<endl;
+ 
     
     /* ################ test ################################################*/
 //    cout<< reads.size()<<endl;
 //    cout<< reads[0]<<endl;
-    /* Vector for the scores */
-    vector<int> scores (reads[1].size()+1,0);
-    semiGlobalWithout(scores,reads[1],reads[1]);
+    /* Vector for the scores: probably not needed */
+//    vector<int> scores (genome.size()+1,0);
+//    vector<int> scores (reads[1].size()+1,0);
     
-//    string seq1="ABCD";
-//    vector<int>scores (seq1.size()+1,0);
-//    semiGlobalWithout(scores,seq1,seq1);
-    printVector(scores);
+    /* Vector to save the pairs: column position and respective score*/
+    vector<pair<int,int> > pos_score;
+    
+    semiGlobalWithout(pos_score, k,reads[1],reads[1]);// match read with itself, it works.
+
+
+//     semiGlobalWithout(pos_score, k,genome,reads[0]); // needed 47 minutes!!!
+    
+
+    
+    cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
+//    cout<<pos_score.back().first <<pos_score.back().second <<endl;
+    time_int(1); // print out elapsed time
     return 0;
 }
