@@ -22,7 +22,7 @@ void readReads(string &path, vector<string> &reads);
 void time_int(int print);
 void printVector(vector<int>  &v);
 void printTable(vector<vector<int> > &v);
-int getMinValue(char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v);
+void getMinValue(int &cell, char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v);
 void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequence, string &read);
 
 
@@ -188,8 +188,8 @@ void printTable(vector<vector<int> > &v)
 		cout << endl;
 	}
 }
-int getMinValue(char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v){
-    int diagonal, vertical, horizontal,cell;
+void getMinValue(int &cell,char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v){
+    int diagonal, vertical, horizontal;
     if (nucleotide1==nucleotide2)
         diagonal= val_d +match;
     else
@@ -198,7 +198,6 @@ int getMinValue(char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int
     horizontal= val_h + gap;
     
     cell = min(min(horizontal,vertical),diagonal);
-    return(cell);
 }
 
 /* Calculates the scores of the alignment, i.e., last row of the dp-matrix*/
@@ -208,7 +207,7 @@ void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequen
     m= read.size();
     n= sequence.size();
 
-    /* Dp-matrix: a (m+1)x2 matrix initialized with 0 */
+    /* Dp-matrix: a (m+1)x 2 matrix initialized with 0 */
     vector<vector<int> > dp(m+1,vector<int> (2,0));
 
 
@@ -221,7 +220,8 @@ void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequen
     /* modified Smith-Waterman */
     for (int j = 1; j <= n ; j++) {
         for (int i = 1; i <= m; i++) {
-            dp[i][1] = getMinValue(sequence[j-1], read[i-1],dp[i-1][0], dp[i][0],dp[i-1][1]);
+//            dp[i][1] = getMinValue(sequence[j-1], read[i-1],dp[i-1][0], dp[i][0],dp[i-1][1]);
+            getMinValue(dp[i][1],sequence[j-1], read[i-1],dp[i-1][0], dp[i][0],dp[i-1][1]);
             
             /* shift one to the right: replace the first value with the second 
              * and write 0 in the second position, same as efect as  adding a 
@@ -240,9 +240,9 @@ void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequen
         /* save column position and score if it is less/equal k */
         if (dp[m][0]<=k){
             pos_score.push_back(make_pair(j,dp[m][0]));
-            cout<<"Occurence were found!"<<endl;
+//            cout<<"Occurence were found!"<<endl;
         }
-        cout<<"Iteration nr: "<<j <<endl;
+//        cout<<"Iteration nr: "<<j <<endl;
     }
     cout<<"Procedure 'semiGlobalWithout' done!" <<endl;
 }
@@ -308,7 +308,7 @@ int main(int argc, char**argv) {
     semiGlobalWithout(pos_score, k,reads[1],reads[1]);// match read with itself, it works.
 
 
-//     semiGlobalWithout(pos_score, k,genome,reads[0]); // needed 47 minutes!!!
+//     semiGlobalWithout(pos_score, k,genome,reads[0]); // needed 31 minutes with netbeans, but 35 seconds under linux
     
 
     
