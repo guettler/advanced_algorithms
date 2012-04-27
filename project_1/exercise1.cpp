@@ -341,8 +341,6 @@ int main(int argc, char**argv) {
 
 //     semiGlobalWithout(pos_score, k,genome,reads[0]); // needed 31 minutes with netbeans, but 35 seconds under linux
     
-
-    
     cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
 //    cout<<pos_score.back().first <<pos_score.back().second <<endl;
 
