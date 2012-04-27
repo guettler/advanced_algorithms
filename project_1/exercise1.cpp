@@ -246,6 +246,37 @@ void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequen
     }
     cout<<"Procedure 'semiGlobalWithout' done!" <<endl;
 }
+/* Function to write the results. DRAFT: to be completed according the its argument*/
+void writeOutput()
+{
+    ofstream outfile("hits.result"); // creates a file to write in
+
+    string sep = ","; // symbor for separtion
+    string nl = "\n"; // new line
+
+    try
+    {
+        string output = ""; 
+//      outfile<<"<id>, <start>, <end>, <errors>"<<nl; // headline
+        
+        for (int i = 0; i < 10; i++) // example
+        {
+        outfile<<"read_"<<i<<sep<<"start_pos"<<sep<<"end_pos"<<sep<<"errors"<<nl;
+
+
+        }
+
+        outfile << output << endl;
+        outfile.close();
+
+    }catch(exception e)
+    {
+            cout << "Error during writing!" << endl;
+            cout << e.what() << endl;
+    }
+}
+
+
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
     time_int(0); // start timing
@@ -314,6 +345,7 @@ int main(int argc, char**argv) {
     
     cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
 //    cout<<pos_score.back().first <<pos_score.back().second <<endl;
+
     time_int(1); // print out elapsed time
     return 0;
 }
