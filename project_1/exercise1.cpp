@@ -311,8 +311,6 @@ int main(int argc, char**argv) {
     k=3;
     ukkonen_on=0;
     /* ------------------------------------------------------------------------*/
-
-    
     
     /* Read fasta files*/
     string genome = readGenome(genome_file);
