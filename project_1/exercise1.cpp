@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <sys/time.h>
+#include <map>
 
 using namespace std;
 #define match 0
@@ -22,8 +23,8 @@ void readReads(string &path, vector<string> &reads);
 void time_int(int print);
 void printVector(vector<int>  &v);
 void printTable(vector<vector<int> > &v);
-void getMinValue(int &cell, char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v);
-void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequence, string &read);
+void getMinValueAndPredecessor(int &cell,char &predecessor, char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v);
+void semiGlobalWithout(vector<pair<int,int> > &pos_score, map<pair<int,int>, char> &traces,int &k, string &sequence, string &read);
 
 
 /* Function definitions */
@@ -188,22 +189,90 @@ void printTable(vector<vector<int> > &v)
 		cout << endl;
 	}
 }
-void getMinValue(int &cell,char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v){
-    int diagonal, vertical, horizontal;
+void printMapTable(map<pair<int,int>,char> &m)
+{
+	map<pair<int,int>,char>::iterator it;
+	//int length = m.size();
+	
+  for ( it=m.begin() ; it != m.end(); it++ )// in part taken from http://www.cplusplus.com/reference/stl/map/clear/
+    cout << (*it).first.first<<","<<(*it).first.second<< " => " << (*it).second << endl;
+}
+
+
+//void getMinValue(int &cell,char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v){
+//    int diagonal, vertical, horizontal;
+//    if (nucleotide1==nucleotide2)
+//        diagonal= val_d +match;
+//    else
+//        diagonal= val_d + mismatch;
+//    vertical=val_v + gap;
+//    horizontal= val_h + gap;
+//    
+//    cell = min(min(horizontal,vertical),diagonal);
+//}
+void getMinValueAndPredecessor(int &cell,char &predecessor,char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v){
+    int diagonal, vertical, horizontal, h_vs_v, h_vs_v_vs_d;
     if (nucleotide1==nucleotide2)
         diagonal= val_d +match;
     else
         diagonal= val_d + mismatch;
     vertical=val_v + gap;
     horizontal= val_h + gap;
+        /* two ways @TODO: after runtime comparison one of them has to be erased*/ 
+//    // 1st
+//    if (horizontal <= diagonal)
+//    {
+//        cell=horizontal;
+//        predecessor="h";
+//    }else{
+//        cell=diagonal;
+//        predecessor="d";
+//    }
+//    if (horizontal <= vertical)
+//    {
+//        cell=horizontal;
+//        predecessor="h";
+//    }else{
+//        cell=vertical;
+//        predecessor="v";
+//    }
+//    if (diagonal <= vertical)
+//    {
+//        cell=diagonal;
+//        predecessor="d";
+//    }else{
+//        cell=vertical;
+//        predecessor="v";
+//    }
     
-    cell = min(min(horizontal,vertical),diagonal);
+    // 2nd
+    h_vs_v=min(horizontal,vertical);
+    h_vs_v_vs_d=min(h_vs_v,diagonal);
+    if(h_vs_v_vs_d==diagonal)
+    {
+        cell=diagonal;
+        predecessor='d';// 
+    }else if (h_vs_v==horizontal) {
+        cell=horizontal;
+        predecessor='h'; // horizonal, i.e., left from current cell
+    }else
+    {
+        cell=vertical;
+        predecessor='v';// vertical, i.e., above the current cell
+    }
+/* Remark: due to the order of comparisions the default resulting assigned 
+ * values are:
+ * - If diagonal=horizontal=vertical -> diagonal 
+ * - if horizontal=vertical, both < diagonal -> horizontal */
+
+    
 }
 
 /* Calculates the scores of the alignment, i.e., last row of the dp-matrix*/
 //void semiGlobalWithout(vector<int> &scores, vector<pair<int,int> > &pos_score, int &k, string &sequence, string &read){
-void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequence, string &read){
+void semiGlobalWithout(vector<pair<int,int> > &pos_score, map<pair<int,int>, char> &traces,int &k, string &sequence, string &read){
     int m,n;
+    char predecessor;
     m= read.size();
     n= sequence.size();
 
@@ -221,8 +290,9 @@ void semiGlobalWithout(vector<pair<int,int> > &pos_score, int &k, string &sequen
     for (int j = 1; j <= n ; j++) {
         for (int i = 1; i <= m; i++) {
 //            dp[i][1] = getMinValue(sequence[j-1], read[i-1],dp[i-1][0], dp[i][0],dp[i-1][1]);
-            getMinValue(dp[i][1],sequence[j-1], read[i-1],dp[i-1][0], dp[i][0],dp[i-1][1]);
-            
+            getMinValueAndPredecessor(dp[i][1],predecessor,sequence[j-1], read[i-1],dp[i-1][0], dp[i][0],dp[i-1][1]);
+            if(dp[i][1]<=k)
+                traces.insert(pair<pair<int,int>,char >(make_pair(i,j),predecessor));//save coordinates and maximum's type
             /* shift one to the right: replace the first value with the second 
              * and write 0 in the second position, same as efect as  adding a 
              * column and deleting the first one */
@@ -275,7 +345,33 @@ void writeOutput()
             cout << e.what() << endl;
     }
 }
+/* Backtracking */
+int getStartPosition(int final_row, int final_column, map<pair<int,int>, char> &traces)
+{
+    int i,j;
+    i=final_row;
+    j= final_column;
+    char predecessor;
+    while (i >1 ) {
+        predecessor=traces.find(make_pair(i,j))->second;
+        switch(predecessor)
+        {
+            case 'd':
+                i--;
+                j--;
+                break;
+            case 'h':
+                j--;
+                break;
+            case 'v':
+                i--;
+                break;
+        }
 
+
+    }
+    return(j); // return only starting column since starting row is always 1
+}
 
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
@@ -308,7 +404,7 @@ int main(int argc, char**argv) {
     
     genome_file=fileNames[0];
     reads_file=fileNames[6];
-    k=3;
+    k=2;
     ukkonen_on=0;
     /* ------------------------------------------------------------------------*/
     
@@ -333,15 +429,24 @@ int main(int argc, char**argv) {
     
     /* Vector to save the pairs: column position and respective score*/
     vector<pair<int,int> > pos_score;
+    map<pair<int,int>,char> traces;
     
-    semiGlobalWithout(pos_score, k,reads[1],reads[1]);// match read with itself, it works.
+    
+    semiGlobalWithout(pos_score,traces, k,reads[1],reads[1]);// match read with itself, it works.
 
 
-//     semiGlobalWithout(pos_score, k,genome,reads[0]); // needed 31 minutes with netbeans, but 35 seconds under linux
+
+//     semiGlobalWithout(pos_score,traces, k,genome,reads[0]); // needed 31 minutes with netbeans, but 35 seconds under linux
     
     cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
-//    cout<<pos_score.back().first <<pos_score.back().second <<endl;
-
+    /* testing backtracking (example lecture)*/
+//    string seq1="ANNEALING";
+//    string seq2="ANNUAL";
+//    semiGlobalWithout(pos_score,traces, k,seq1,seq2);
+//    printMapTable(traces);
+//    int pos = getStartPosition(6,5,traces);
+    int pos = getStartPosition(400,400,traces);
+    cout<<pos<<endl;
     time_int(1); // print out elapsed time
     return 0;
 }
