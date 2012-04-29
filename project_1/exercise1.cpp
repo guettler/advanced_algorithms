@@ -43,7 +43,6 @@ string readGenome(string &path)
             if(line.at(0)!= '>') // if not id line
                 input.append(line);
         }
-
     }
     catch(exception e)
     {
@@ -317,27 +316,23 @@ void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence, 
 }
 
 
-/* Function to write the results. DRAFT: to be completed according the its argument*/
-void writeOutput(vector<vector<int> > &pos_score)
+/* Function to write the results */
+void writeOutput(vector<vector<int> > &pos_score2)
 {
     ofstream outfile("hits.result"); // creates a file to write in
 
     string sep = ","; // symbor for separtion
     string nl = "\n"; // new line
-
+    int m;
+    m=pos_score2.size();
+    
     try
     {
-        string output = "";
 //      outfile<<"<id>, <start>, <end>, <errors>"<<nl; // headline
+        
+        for (int i = 0; i < m; i++) 
+            outfile<<"read_"<<pos_score2[i][0]<<sep<<pos_score2[i][1]<<sep<<pos_score2[i][2]<<sep<<pos_score2[i][3]<<nl;
 
-        for (int i = 0; i < 10; i++) // example
-        {
-        outfile<<"read_"<<i<<sep<<"start_pos"<<sep<<"end_pos"<<sep<<"errors"<<nl;
-
-
-        }
-
-        outfile << output << endl;
         outfile.close();
 
     }catch(exception e)
@@ -356,7 +351,21 @@ int main(int argc, char**argv) {
 
     // Prints welcome message...
     cout << "Welcome ..." << endl;
-
+//    /* --- read the arguments. To be uncomment for the final version ----  */
+    /* Please: DO NOT DELETE! */
+//    // Prints arguments...
+//    if (argc > 1) {
+//        cout << endl << "Arguments:" << endl;
+//        for (int i = 1; i < argc; i++) {
+//            cout << i << ": " << argv[i] << endl;
+//        }
+//    }
+//    genome_file = argv[1];
+//    reads_file = argv[2];
+//    k = atoi(argv[3]); // number of errors
+//    ukkonen_on = atoi(argv[4]); // indicates whether the ukkonen trick will be used or not
+//    /* --------------------- end of block ----------------------------------*/
+    
     /* ------ Input block for the working phase.------------------------------
      * -------To be erased before checking -----*/
     string fileNames[]={"random10M.fasta","random10M_reads50_100.fasta","random10M_reads50_1k.fasta",
@@ -364,10 +373,10 @@ int main(int argc, char**argv) {
     "random10M_reads400_100.fasta","random10M_reads400_1k.fasta"}; // 7 given test files
 
     genome_file=fileNames[0];
-    reads_file=fileNames[5];
-    k=15;
+    reads_file=fileNames[6];
+    k=0;
     ukkonen_on=0;
-    bool useUkkonenTrick = true;
+    bool useUkkonenTrick = false;
     bool filterResults = true;
     /* ------------------------------------------------------------------------*/
 
@@ -387,15 +396,15 @@ int main(int argc, char**argv) {
 
     vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
 
-    for(int readNr = 1; readNr <= 2; readNr++){							// run ukkonen for readNr many reads, save all scores in pos_score
+    for(int readNr = 0; readNr < 10; readNr++){							// run ukkonen for readNr many reads, save all scores in pos_score
     	vector<vector<int> > tmp_pos_score;
-    	fastUkkonen(tmp_pos_score, k, genome, reads[readNr-1], useUkkonenTrick);
-    	filterHitsAndBacktrack(pos_score, tmp_pos_score, k, genome, reads[readNr-1], readNr, filterResults);
+    	fastUkkonen(tmp_pos_score, k, genome, reads[readNr], useUkkonenTrick);
+    	filterHitsAndBacktrack(pos_score, tmp_pos_score, k, genome, reads[readNr], readNr, filterResults);
     }
 
     cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
     printTable(pos_score);
-
+    writeOutput(pos_score);
     time_int(1); // print out elapsed time
     return 0;
 }
