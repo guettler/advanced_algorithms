@@ -354,8 +354,8 @@ void semiGlobalWith(vector<vector<int> > &pos_score2, int &k, string &sequence, 
     list<vector<int> > dp(1, vector<int> (m+1,0));
 
     /* A template for new matrix-Columns */
-    vector<int> newColumnTemplate(m+1,10);
-	newColumnTemplate[0] = 0;
+    vector<int> newColumnTemplate(m+1,k+1);						// initialize new cells with k+1 for safety (ukkonen checks for <= k)
+	newColumnTemplate[0] = 0;									// except the first row ;)
 
     /* Initialize the first column */
     for (int j = 1; j <= m; j++)
