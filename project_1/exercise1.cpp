@@ -26,8 +26,9 @@ void printVector(vector<int>  &v);
 void printTable(vector<vector<int> > &v);
 void getMinValueAndPredecessor(int &cell,char &predecessor, char &nucleotide1, char &nucleotide2,int &val_d, int &val_h, int &val_v);
 void semiGlobalWithout(vector<pair<int,int> > &pos_score, map<pair<int,int>, char> &traces,int &k, string &sequence, string &read);
-void semiGlobalWith(vector<pair<int,int> > &pos_score, int &k, string &sequence, string &read, int &readNr);
-int startPositionOffset(vector<vector<int> > &backTrackMat);
+void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence, string &read);
+void filterHitsAndBacktrack(vector<vector<int> > &pos_score2, vector<vector<int> > &tmp_pos_score,
+		int &k, string &sequence, string &read, int &readNr, bool &filterResults);
 
 /* Function definitions */
 string readGenome(string &path)
@@ -320,92 +321,141 @@ void semiGlobalWithout(vector<pair<int,int> > &pos_score, map<pair<int,int>, cha
 }
 
 
-/* Backtracking and */
-int startPositionOffset(vector<vector<int> > &backTrackMat){
-	int bn = backTrackMat.size();
-	int bm = backTrackMat[0].size();
-	int i = bn - 1;
-	int j = bm - 1;
 
-	while(j > 1){
-		if(backTrackMat[i-1][j-1] == backTrackMat[i][j] || backTrackMat[i-1][j-1] + mismatch == backTrackMat[i][j] ){
-			i--;
-			j--;
-		}else if(backTrackMat[i-1][j] + gap == backTrackMat[i][j]){
-			i--;
-		}else{
-			j--;
+/* Filter the results of fastUkkonen and do backtracking for remaining hits */
+void filterHitsAndBacktrack(vector<vector<int> > &pos_score2, vector<vector<int> > &tmp_pos_score,
+		int &k, string &sequence, string &read, int &readNr, bool &filterResults){
+
+	int m = read.size();
+	int n = m + k;			// we only calculate an m+k wide part of the dp-matrix for backtracking (worst case: k gaps in the read)
+
+	// filter and backtracking
+	if(tmp_pos_score.size() > 2){									// if there are any results (exept the two dummy-results added by fastUkkonen)
+		for(int pos=1; pos<tmp_pos_score.size()-1; pos++){					// then for every result in tmp_pos_score
+
+			// filter to get only the best results in the neighborhood of a hit.
+			if(		(tmp_pos_score[pos][0] != tmp_pos_score[pos-1][0] + 1 &&      // if there is no hit in the direct neighborhood
+					tmp_pos_score[pos][0] != tmp_pos_score[pos+1][0] - 1)
+					||																// OR
+					(tmp_pos_score[pos][0] == tmp_pos_score[pos-1][0] + 1 &&		// if the the hit has two direct neighbors
+					tmp_pos_score[pos][0] == tmp_pos_score[pos+1][0] - 1 &&			// with equal or higher (worse) score --> local score minimum
+					tmp_pos_score[pos][1] <= tmp_pos_score[pos-1][1] &&
+					tmp_pos_score[pos][1] <= tmp_pos_score[pos+1][1]) || !filterResults){ // OR if the filter is turned off
+
+				string B_sequence = sequence.substr(tmp_pos_score[pos][0] - n, n);	// get a m+k long part of the genome sequence from known end-position of the hit
+				reverse(B_sequence.begin(), B_sequence.end());						// and reverse it
+				string B_read = read;												// make a copy of the read
+				reverse(B_read.begin(), B_read.end());								// and reverse it
+
+				// run semiglobal alignment (normal smith waterman without ukkonen) for our new sequences (see fastUkkonen for code details)
+				int cj[m+1];
+				int cp, cn;
+				int min_score = k+1;
+				int min_score_pos;
+
+				for(int j=0; j<=m; j++){
+						cj[j] = j;
+				}
+
+				for(int i=1; i<=n; i++){
+					cn = 0; cp = 0;
+					for(int j=1; j<=m; j++){
+						if(B_sequence[i-1] == B_read[j-1]){ // match
+							cn = cp;
+						}else if(cp < cn || cj[j] < cn){
+							if(cp < cn){				// mismatch
+								cn = cp;
+							}
+							if(cj[j] < cn){				// gap in read
+								cn = cj[j];
+							}
+							cn++;
+						}else{							// gap in sequence
+							cn++;
+						}
+						cp = cj[j];
+						cj[j] = cn;
+					}
+					if(cj[m] < min_score){				// save the position of the minimal score in bottom row of the DP-matrix
+						min_score = cj[m];
+						min_score_pos = i;
+					}
+				}
+
+				// start_pos of the hit is the known end_pos minus the min_score_pos we just calculated
+				int start_pos = tmp_pos_score[pos][0] - min_score_pos;
+				int end_pos = tmp_pos_score[pos][0];
+				int score = tmp_pos_score[pos][1];
+				vector<int> scoreVector(4,0);			// fill a result vector with: (read Nr., start position, end position, score)
+				scoreVector[0] = readNr; scoreVector[1] = start_pos; scoreVector[2] = end_pos; scoreVector[3] = score;
+				pos_score2.push_back(scoreVector);		// save it in pos_score2
+
+			}//end if
+
+		}//end for
+	}//end if
+
+    cout<<"Procedure 'filterHitsAndBacktrack' for read Nr. "<< readNr<< " done!" <<endl;
+}
+
+/* Ukkonen algorithm implemented with one int array and single integer values, see lecture 2 script for pseudo code */
+void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence, string &read){
+
+	int m,n;
+	int lact = k+1;												// initialize last active cell indicator
+	m= read.size();												// initialize 'sequence' and 'read' size
+	n= sequence.size();
+
+	int cj[m+1];												// int-vector cj is more or less a column of the DP-matrix
+	int cp, cn;													// single integer values for storage of other DP-matrix cell values
+
+	tmp_pos_score.push_back(vector<int>(2,-5));					// initialize temporary result vector with a "dummy" entry (used for filtering)
+
+	for(int j=0; j<=m; j++){									// initialize our DP-matrix column
+		cj[j] = j;
+	}
+
+	for(int i=1; i<=n; i++){					// for every character of 'sequence'
+
+		cn = 0; cp = 0;							// set cp and cn zero (correspond to entries [i-1] [0] and [i] [0] of the DP-matrix here
+
+		for(int j=1; j<=lact; j++){					// for characters of 'read' until last active cell
+
+			if(sequence[i-1] == read[j-1]){ // match
+				cn = cp;
+			}else if(cp < cn || cj[j] < cn){
+				if(cp < cn){				// mismatch
+					cn = cp;
+				}
+				if(cj[j] < cn){				// gap in read
+					cn = cj[j];
+				}
+				cn++;
+			}else{							// gap in sequence
+				cn++;
+			}
+
+			cp = cj[j];
+			cj[j] = cn;
+		}
+
+		// after calculation of the column actualize the lact indicator
+		while(cj[lact] > k){	// reduce lact until last active cell has score lower than k (no need to calculate mor of the column next time)
+			lact--;
+		}
+		if(lact == m){								// if lact == m we have a hit !!
+			int pos_end = i;											// end pos of the match is i
+			int score = cj[lact];										// score is saved in the last(bottom) cell of cj
+			vector<int> tmp_scoreVector(2,0);							// fill a temporary result vector with this info
+			tmp_scoreVector[0] = pos_end; tmp_scoreVector[1] = score;
+			tmp_pos_score.push_back(tmp_scoreVector);
+		}else{										// if lact < m we have to increase it by one
+			lact++;
 		}
 	}
 
-	return i - bn;
-}
+	tmp_pos_score.push_back(vector<int>(2,-5));		// add another "dummy" entry at the end of the temporary result vector
 
-
-void semiGlobalWith(vector<vector<int> > &pos_score2, int &k, string &sequence, string &read, int &readNr){
-    int m,n;
-	int diagonal, vertical, horizontal;
-    int lact = k+2;												// initialize last active cell indicator
-    m= read.size();												// initialize 'sequence' and 'read' size
-    n= sequence.size();
-
-    /* The DP-matrix, implemented as a list of int-vectors.
-     * only the first vector is initialized (so a it's (1 x m+1) matrix for now)*/
-    list<vector<int> > dp(1, vector<int> (m+1,0));
-
-    /* A template for new matrix-Columns */
-    vector<int> newColumnTemplate(m+1,k+1);						// initialize new cells with k+1 for safety (ukkonen checks for <= k)
-	newColumnTemplate[0] = 0;									// except the first row ;)
-
-    /* Initialize the first column */
-    for (int j = 1; j <= m; j++)
-    	dp.back()[j] = dp.back()[j-1]+ gap;
-
-    /* modified Smith-Waterman/Ukkonen */
-    for (int i = 1; i <= n ; i++) {									// for every character of 'sequence'
-
-    	vector<int>& lastColumn = dp.back();							// remember the last column that is already computed
-    	vector<int> newColumn = newColumnTemplate;						// prepare the new column
-
-    	for(int j = 1; j <= lact; j++ ){								// for every character of 'read' up to the last active cell
-
-    		if(sequence[i-1] == read[j-1]){									// compare 'sequence' and 'read' characters
-    			diagonal = lastColumn[j-1] + match;
-    		}else{
-    			diagonal = lastColumn[j-1] + mismatch;
-    		}
-    		vertical = newColumn[j-1] + gap;
-    		horizontal = lastColumn[j] + gap;
-    		newColumn[j] = min(diagonal, min(horizontal, vertical));		// find minimal score
-
-    	}
-
-        while(newColumn[lact] > k){									// reduce lact indicator until the last active cell has score of k or less
-        	lact--;
-        }
-
-        if(lact == m){												// if the last active cell is in the bottom row, we found a match
-
-        	vector<vector<int> > backTrackMat(dp.begin(), dp.end());	// copy the list of vectors to a vector of vectors for backtracking
-        	int pos_end = i;											// end pos of the match is i
-        	int pos_start = i + startPositionOffset(backTrackMat);		// backtracking and calculation of the offset from start to end position (negative number)
-        	int score = newColumn[lact];								// save the match in the score vector
-        	vector<int> scoreVector(4,0);
-        	scoreVector[0] = readNr; scoreVector[1] = pos_start; scoreVector[2] = pos_end; scoreVector[3] = score;
-        	pos_score2.push_back(scoreVector);
-
-        }else{														// if lact is not in the bottom row there is no match and we increase lact by one
-        	lact++;
-        }
-
-    	dp.push_back(newColumn);									// add the new column to our DP-matrix
-
-        if(i > k+m){												// delete the first column of dp. we only ever keep k+m columns
-        	dp.pop_front();											// (never need more for backtracking)
-        }
-    }
-
-    cout<<"Procedure 'semiGlobalWith' for read "<< readNr<< "done!" <<endl;
 }
 
 
@@ -494,11 +544,12 @@ int main(int argc, char**argv) {
     string fileNames[]={"random10M.fasta","random10M_reads50_100.fasta","random10M_reads50_1k.fasta",
     "random10M_reads100_100.fasta","random10M_reads100_1k.fasta",
     "random10M_reads400_100.fasta","random10M_reads400_1k.fasta"}; // 7 given test files
-    
+
     genome_file=fileNames[0];
-    reads_file=fileNames[6];
-    k=2;
+    reads_file=fileNames[5];
+    k=15;
     ukkonen_on=0;
+    bool filterResults = true;
     /* ------------------------------------------------------------------------*/
     
     /* Read fasta files*/
@@ -521,23 +572,25 @@ int main(int argc, char**argv) {
 //    vector<int> scores (reads[1].size()+1,0);
     
     /* Vector to save the pairs: column position and respective score*/
-    vector<pair<int,int> > pos_score;
-    map<pair<int,int>,char> traces;
+//    vector<pair<int,int> > pos_score;
+//    map<pair<int,int>,char> traces;
 
 //    semiGlobalWithout(pos_score,traces, k,reads[1],reads[1]);// match read with itself, it works
 
 //     semiGlobalWithout(pos_score,traces, k,genome,reads[0]); // needed 31 minutes with netbeans, but 35 seconds under linux
 
-    vector<vector<int> > pos_score2;			// score vector for format: (nr. of read, start position, end position, score)
+		vector<vector<int> > pos_score2;					// score vector for format: (nr. of read, start position, end position, score)
 
-    for(int readNr = 0; readNr <= 4; readNr++){					// run ukkonen for readNr many reads, save all scores in pos_score2
-    	semiGlobalWith(pos_score2, k, genome, reads[readNr], readNr);
-    }
-    
-//    cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
-    cout<<"Nr. of occurences: "<<pos_score2.size()<<endl;
+        for(int readNr = 1; readNr <= 10; readNr++){							// run ukkonen for readNr many reads, save all scores in pos_score2
+        	//semiGlobalWith(pos_score2, k, genome, reads[readNr], readNr);
+        	vector<vector<int> > tmp_pos_score;
+        	fastUkkonen(tmp_pos_score, k, genome, reads[readNr-1]);
+        	filterHitsAndBacktrack(pos_score2, tmp_pos_score, k, genome, reads[readNr-1], readNr, filterResults);
+        }
 
-    printTable(pos_score2);
+        cout<<"Nr. of occurences: "<<pos_score2.size()<<endl;
+        printTable(pos_score2);
+
 
     /* testing backtracking (example lecture)*/
 //    string seq1="ANNEALING";
@@ -545,8 +598,8 @@ int main(int argc, char**argv) {
 //    semiGlobalWithout(pos_score,traces, k,seq1,seq2);
 //    printMapTable(traces);
 //    int pos = getStartPosition(6,5,traces);
-    int pos = getStartPosition(400,400,traces);
-    cout<<pos<<endl;
+//    int pos = getStartPosition(400,400,traces);
+//    cout<<pos<<endl;
     time_int(1); // print out elapsed time
     return 0;
 }
