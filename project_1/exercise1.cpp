@@ -1,5 +1,5 @@
 /*
- * File:   exercise1.cpp
+ * File:    exercise1.cpp
  * Authors: Group 5
  */
 
@@ -9,7 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <sys/time.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 
 using namespace std;
 #define match 0
@@ -351,22 +351,42 @@ int main(int argc, char**argv) {
     bool useUkkonenTrick; //indicates whether the ukkonen trick will be used or not. 
     bool filterResults = true; // default value for filtering
 
-    // Prints welcome message...
-    cout << "Welcome ..." << endl;
-//    /* --- read the arguments. @TODO: To be uncomment for the final version ----  */
+    /* --- print the arguments. @TODO: To be uncomment for the final version ----  */
     /* Please: DO NOT DELETE! */
-//    // Prints arguments...
+//    string ukk="without";
 //    if (argc > 1) {
-//        cout << endl << "Arguments:" << endl;
+//        cout << endl << "---- Introduced arguments ----" << endl;
 //        for (int i = 1; i < argc; i++) {
-//            cout << i << ": " << argv[i] << endl;
+//            switch (i){
+//                case 1:
+//                    cout <<"Genome's file:" << "\t" << argv[1] << endl;
+//                    break;
+//                case 2:
+//                    cout <<"Reads file:" << "\t" << argv[2] << endl;
+//                    break;
+//                case 3:
+//                    cout <<"Nr. of allowed erros:" << "\t" << argv[3] << endl;
+//                    break;
+//                case 4:
+//                    if(atoi(argv[4])==1)
+//                        ukk="with";                        
+//                    cout <<"with/without Ukkonen?" << "\t" << ukk << endl;
+//                    break;
+//                default:
+//                    cout<<"undefined input"<< "\t" <<argv[i]<<endl;
+//                    break;
+//            }
+//                 
 //        }
 //    }
+//    if(argc<5)
+//        cout<<"WARNING: not enough arguments given!"<<endl;
+//    /* set given arguments */
 //    genome_file = argv[1];
 //    reads_file = argv[2];
 //    k = atoi(argv[3]); // number of errors
-//    bool useUkkonenTrick = (atoi(argv[4])==1); // Only value 1 sets it true, all other input values make it false.
-//    /* --------------------- end of block ----------------------------------*/
+//    useUkkonenTrick = (atoi(argv[4])==1); // Only value 1 sets it true, all other input values make it false.
+    /* --------------------- end of block ----------------------------------*/
     
     /* ------ Input block for the working phase.------------------------------
      * -------@TODO: To be erased/commented before checking -----*/
@@ -376,7 +396,7 @@ int main(int argc, char**argv) {
 
     genome_file=fileNames[0];
     reads_file=fileNames[6];
-    k=0;
+    k=3;
     useUkkonenTrick = true;
     filterResults = true;
     /* ------------------------------------------------------------------------*/
@@ -387,13 +407,13 @@ int main(int argc, char**argv) {
     vector<string> reads(m, "" );
     readReads(reads_file, reads);
 
-    cout <<"Nr. of Reads: "<< m<<endl;
-    cout <<"1st sequence's size: "<< genome.size()<<endl;
-    cout <<"2nd sequence's size: "<< reads[0].size()<<endl;
+    cout <<"Nr. of reads: "<< m<<endl;
+    cout <<"Text's size: "<< genome.size()<<endl;
+    cout <<"Pattern's size: "<< reads[0].size()<<endl;
 
 
 
-    m= 5; // number of reads, modify it if you dont want to compute all of them @TODO: delete it for the final version :)
+    m= 40; // number of reads, modify it if you dont want to compute all of them @TODO: delete it for the final version :)
     vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
 
     /* main process for the computation of m reads */
@@ -404,7 +424,7 @@ int main(int argc, char**argv) {
     }
 
     cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
-    printTable(pos_score); // @TODO: delete/uncomment before deadline
+    printTable(pos_score); // @TODO: delete/comment it before deadline
     writeOutput(pos_score); // export of the results
     time_int(1); // print out elapsed time
     return 0;
