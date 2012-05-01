@@ -56,33 +56,30 @@
 \textcolor{red}{To do}: "Describe your implementation and your observations"
 
 \section{Implementation}
-The computation of a semi global alignment with dynamic programming is the same as to perform the \textit{Smith-Waterman} algorithm with the difference that the initial gap costs for one of the sequence are not equal to zero. Moreover it computes the minimum instead of the maximum for each cell.
+The computation of a semi global alignment with dynamic programming is the same as to perform the \textit{Smith-Waterman} algorithm with the difference 
+that the initial gap costs for one of the sequences are not equal to zero. Moreover it computes the minimum instead of the maximum for each cell.\\
 
-Basic idea:
-\begin{enumerate}
-	\item compute the occurrences with at most $k$ errors, i.e., the column number of the last row of the DP matrix with entries less/equal $k$
-	\item calculate the DP matrices for the interval ending at these positions and beginning $m+k$ columns left of this, with $m=$read size. During this procedure save the traces.
-	\item find initial position back tracking the end position (using the saved traces)
-\end{enumerate}
-\textcolor{red}{Possible subtopics to comment briefly}:
-\begin{itemize}
-	\item modification of the \textit{Ukkonen} algorithm, w.r.t. backtracking
-	\item filtering of the results (Why, how?)
-
-\end{itemize}
-
-The values for computing the DP-matrix were: 	$match = 0$, $mismatch = 1$, $gap \ cost =1$ (initial as well as internal).
-\subsection*{Remarks}
-\begin{itemize}
-	\item vectors as data structure are comfortable but not the fastest option: pointers to int-arrays showed a better performance
-	\item \textcolor{red}{something else to comment here?}
-
-	\end{itemize}
+\subsection{Smith-Waterman}
+We used a Smith-Waterman implementation very similar to the pseudo code found in the lecture skript. One Column of the DP-matrix is stored as an integer array
+of length $m$ (the length of the read) at any time during the algorithm. Two additional single integer variables (Cn and Cp) are used to store temporary values
+for the score minimizing function.\\
+The memory consumption for this implementation is in $O(m)$ and it prooved to be considerably faster than any previous attempts using {\it vector} or {\it list} based data structures for the matrix.\\
+One disadvantage of this implementation is the lack of a complete matrix for backtracking since only one column is saved. We solved this problem
+by simply using the same algorithm backwards from the known end position of every confirmed hit from the forward run. For every hit we had to compute an additional $m*(m+k)$ big DP-matrix
+considering the worst case of a hit with $k$ errors having k gaps introduced in the {\it read} sequence. We did not save the backtracking trace since we are only interested
+in the start position of a hit and not in the actual alignment. \\
+Since we filter suboptimal hits (caused by the 'shifting' read sequence across the optimal site) before this step, the computational overhead for the additional matrices is 
+negligible if $k$ is not chosen too high.\\
+ 
+\subsection{Ukkonen Trick}
+The Ukkonen trick was implemented exactly like in the skript pseudo code by only computing the current column up to a 'last active cell' which is updated for every new column in 
+constant amortized time. Since the last active cell is defined by the last score in the column that is better than or equal to $k$, the algorithms complexity changes from $O(n*m)$ to $O(n*k)$.\\
+Our results confirm a large decrease in run time with the Ukkonen trick compared to the unmodified Smith-Waterman algorithm.
 
 % #######################################################################################
 \section{Results/Observations}
 We expect running times in order of $\mathcal{O}(m  n)$ (classical approach) and $\mathcal{O}(k  n)$ ( Ukkonen's algorithm) with $n=$ text length, $m=$ pattern length and $k=$ number of allowed errors.
-In fact, the running time is extremely reduced if the program uses the Ukkonen's trick.
+In fact, the running time is reduced extremely if the program uses the Ukkonen's trick.
 
 With $k=0$ and filtering the results, i.e., suboptimal alignments were ignored,  following running times were noted:\\
 \begin{center}
