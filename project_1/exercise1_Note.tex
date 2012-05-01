@@ -8,6 +8,7 @@
 \usepackage{subfigure}
 \usepackage{multirow}
 \usepackage{multicol}
+\usepackage{booktabs} % for midrule
 \usepackage{colortbl}
 \usepackage{color}
 \usepackage{hyperref}
@@ -33,9 +34,9 @@
 
 
 
-\renewcommand{\headrulewidth}{0.5pt}
-\fancyfoot[C]{\thepage}
-\renewcommand{\footrulewidth}{0.5pt}
+%\renewcommand{\headrulewidth}{0.5pt}
+%\fancyfoot[C]{\thepage}
+%\renewcommand{\footrulewidth}{0.5pt}
 % folder for images
 %\graphicspath{{./img/}}
 \begin{document}         
@@ -45,33 +46,83 @@
 \subtitle{Exercise 1: Read mapping with semi global alignment}
 %\author{ }
 %\author{}
-\author{Group 5: N. G"uttler, K. Liebers, F. M...}
+\author{Group 5: N. G"uttler, K. Liebers, F. Mattes} % lexicogrphic sorted
 \maketitle
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Remarks}
-\begin{itemize}
-	\item $k$ errors means $k$ differences (substitutions or indels)
-	\item semi global alignment with dynamic programming same as Smith-Waterman algorithm with the difference that the initial gap costs for one of the sequence are not equal to zero and computing the minimum instead of maximum
-	\item possible values for scoring:
-	
-\begin{itemize}
-	\item [-] match =0
-	\item [-] mismatch = 1
-	\item [-] initial and internal gap cost =1
-\end{itemize}
-	\end{itemize}
-	
-	For the calculation of the number of errors it is easier if substitutions and indels have the same value (1). In the original example for semi global alignment the internal gap costs amount to 2, but I think one can change it and still semi global.
-	
 
 \textcolor{red}{To do}: "Describe your implementation and your observations"
-\section{Implementation}
-\section{Results/Observations}
-\end{document}
 
+\section{Implementation}
+The computation of a semi global alignment with dynamic programming is the same as to perform the \textit{Smith-Waterman} algorithm with the difference that the initial gap costs for one of the sequence are not equal to zero. Moreover it computes the minimum instead of the maximum for each cell.
+
+Basic idea:
+\begin{enumerate}
+	\item compute the occurrences with at most $k$ errors, i.e., the column number of the last row of the DP matrix with entries less/equal $k$
+	\item calculate the DP matrices for the interval ending at these positions and beginning $m+k$ columns left of this, with $m=$read size. During this procedure save the traces.
+	\item find initial position back tracking the end position (using the saved traces)
+\end{enumerate}
+\textcolor{red}{Possible subtopics to comment briefly}:
+\begin{itemize}
+	\item modification of the \textit{Ukkonen} algorithm, w.r.t. backtracking
+	\item filtering of the results (Why, how?)
+
+\end{itemize}
+
+The values for computing the DP-matrix were: 	$match = 0$, $mismatch = 1$, $gap \ cost =1$ (initial as well as internal).
+\subsection*{Remarks}
+\begin{itemize}
+	\item vectors as data structure are comfortable but not the fastest option: pointers to int-arrays showed a better performance
+	\item \textcolor{red}{something else to comment here?}
+
+	\end{itemize}
+
+% #######################################################################################
+\section{Results/Observations}
+We expect running times in order of $\mathcal{O}(m  n)$ (classical approach) and $\mathcal{O}(k  n)$ ( Ukkonen's algorithm) with $n=$ text length, $m=$ pattern length and $k=$ number of allowed errors.
+In fact, the running time is extremely reduced if the program uses the Ukkonen's trick.
+
+With $k=0$ and filtering the results, i.e., suboptimal alignments were ignored,  following running times were noted:\\
+\begin{center}
+\begin{tabular}{c|c|r||c|c}
+\toprule
+\multirow{2}*{Reads file's name} & \multirow{2}*{Ukkonen trick?} & \multicolumn{2}{c|}{Running time [sec]}& \multirow{2}*{Nr. of occurrences} \\
+\cline{3-4}
+&& exercise1.cpp & Razers&\\
+\hline
+\multirow{2}*{50\_100}&no & 290.39&\multirow{2}*{11.79} &\multirow{2}*{31}\\
+ &yes &13.60 & &\\
+\hline
+\multirow{2}*{50\_1k}& no& 2915.29&\multirow{2}*{12.42} &\multirow{2}*{289}\\
+ &yes &136.47 & &\\
+ \hline
+\multirow{2}*{100\_100}& no& 584.70& \multirow{2}*{11.95}&\multirow{2}*{16}\\
+ & yes& 13.79& &\\
+\hline
+\multirow{2}*{100\_1k}& no& 5840.71& \multirow{2}*{13.23}&\multirow{2}*{189}\\
+ &yes &136.68 & &\\
+ \hline
+\multirow{2}*{400\_100}&no &2278.69&\multirow{2}*{12.24} &\multirow{2}*{11}\\
+ &yes & 15.66& &\\
+\hline
+\multirow{2}*{400\_1k}& no& 23179.58&\multirow{2}*{16.19} &\multirow{2}*{54}\\
+ & yes& 137.23& &\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+Program 'exercise1' was executed on the linux machine \textit{andorra}\footnote{andorra.imp.fu-berlin.de}.  The \textit{Razers}\footnote{Version: 'RazerS\_20100618', called without any options} program ran on a windows machine, since the supplied binary file (\textit{razers3}) could not get started under linux.
+
+The values of the table above can be interpreted as a lower bound for the running time of the respective data sets. With increasing $k$ the complexity will obviously also increase, since more occurrences will be found  than in the case of perfect matching ($k=0$). Thus more DP-matrices as well as more cell values within the \textit{Ukkonen} algorithm have to be calculated. \\
+E.g. $28.89$s and $52$ occurrences, $42.35$s and $79$ or $51.55$s and $108$ occurrences were observed by running the first data set with \textit{Ukkonnen} trick and $k \in \{1,2,3\}$ respectively (to mention some of these expected increases).
+
+\textit{Razers} was always faster than our cpp-program, even if it calculates more start positions: with default values it computes the start positions for reads up to a so called 'percent identity threshold' of 92. That means, that the allowed number of errors varies depending on the read's length. Using the last version and/or evoking the program with additional options, so that only the calculation for a given $k$ are effectuated, would allow the program to run even faster.
+
+Regarding the accuracy, we could establish that the number of occurrences calculated by both programs coincide in all cases. This was observed by filtering the reads that match perfect ($k=0$), i.e., considering only the reads with entries equal to 100 in the last column.   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
