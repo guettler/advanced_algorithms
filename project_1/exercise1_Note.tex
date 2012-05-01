@@ -52,9 +52,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\textcolor{red}{To do}: "Describe your implementation and your observations"
-
 \section{Implementation}
 The computation of a semi global alignment with dynamic programming is the same as to perform the \textit{Smith-Waterman} algorithm with the difference 
 that the initial gap costs for one of the sequences are not equal to zero. Moreover it computes the minimum instead of the maximum for each cell.\\
@@ -118,7 +115,7 @@ E.g. $28.89$s and $52$ occurrences, $42.35$s and $79$ or $51.55$s and $108$ occu
 
 \textit{Razers} was always faster than our cpp-program, even if it calculates more start positions: with default values it computes the start positions for reads up to a so called 'percent identity threshold' of 92. That means, that the allowed number of errors varies depending on the read's length. Using the last version and/or evoking the program with additional options, so that only the calculation for a given $k$ are effectuated, would allow the program to run even faster.
 
-Regarding the accuracy, we could establish that the number of occurrences calculated by both programs coincide in all cases. This was observed by filtering the reads that match perfect ($k=0$), i.e., considering only the reads with entries equal to 100 in the last column.   
+Regarding the accuracy of the program's calculations, we could establish that the number of and the occurrences themselves were the same in all cases. This was observed by filtering the reads that match perfect ($k=0$), i.e., considering only the reads with entries equal to 100 in the last column.   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
