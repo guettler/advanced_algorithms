@@ -9,7 +9,6 @@
 #include <vector>
 #include <algorithm>
 #include <sys/time.h>
-#include <stdlib.h>
 
 using namespace std;
 #define match 0
@@ -38,7 +37,6 @@ string readGenome(string &path)
         file.open(path.c_str(), ifstream::in);
         if(!file)
             cout<< "File could not be opened. Please check path and file's name..."<< endl;
-
         while(!file.eof())
         {
             getline(file, line);
@@ -64,7 +62,6 @@ int getNrOfReads(string &path)
         file.open(path.c_str(), ifstream::in);
         if(!file)
             cout<< "File could not be opened. Please check path and file's name..."<< endl;
-
         while(!file.eof())
         {
             getline(file, line);
@@ -83,143 +80,135 @@ void readReads(string &path, vector<string> &reads)
 {
     ifstream file;
     string line;
-        int read_nr=-1;
-	try
-	{
-            file.open(path.c_str(), ifstream::in);
-            if(!file)
-                cout<< "File could not be opened. Please check path and file's name..."<< endl;
-
-            while(!file.eof())
-            {
-                getline(file, line);
-                if(line.at(0)!='>')
-                    reads[read_nr].append(line);
-                else
-                    read_nr++;
-            }
-           file.close();
-	}
-
-        catch(exception e)
-	{
-            //cout << e.what() << endl;
-	}
-
-
+    int read_nr=-1;
+    try
+    {
+        file.open(path.c_str(), ifstream::in);
+        if(!file)
+            cout<< "File could not be opened. Please check path and file's name..."<< endl;
+        while(!file.eof())
+        {
+            getline(file, line);
+            if(line.at(0)!='>')
+                reads[read_nr].append(line);
+            else
+                read_nr++;
+        }
+        file.close();
+    }
+    catch(exception e)
+    {
+        //cout << e.what() << endl;
+    }
 }
 /* Running time calculation (C style)*/
 void time_int(int print){
-  static struct timeval t1; /* var for previous time stamp */
-  static struct timeval t2; /* var of current time stamp */
-  struct timezone tzp;
+    static struct timeval t1; /* var for previous time stamp */
+    static struct timeval t2; /* var of current time stamp */
+    struct timezone tzp;
 
-  if(gettimeofday(&t2, &tzp) == -1) return;
+    if(gettimeofday(&t2, &tzp) == -1) return;
 
-  if(print == 1){
+    if(print == 1){
     double elapsed_seconds=(double)(t2.tv_sec - t1.tv_sec) + ((double)(t2.tv_usec - t1.tv_usec))/1000000;
     printf("Time spent [%.2fs] \n", elapsed_seconds);
-  }
-  t1 = t2;
+    }
+    t1 = t2;
 }
 
 void printVector(vector<int>  &v)
 {
-	int length = v.size();
-	for(int i=0; i<length; ++i)
-            cout << v[i]<< " ";
-	cout << endl;
+    int length = v.size();
+    for(int i=0; i<length; ++i)
+        cout << v[i]<< " ";
+    cout << endl;
 
 }
 void printTable(vector<vector<int> > &v)
 {
-	int length = v.size();
-	int width = v[0].size();
+    int length = v.size();
+    int width = v[0].size();
 
-	for(int i=0; i<length; ++i)
-	{
-		for(int j=0; j<width; ++j)
-		{
-			cout << v[i][j]<< " ";
-		}
-		cout << endl;
-	}
+    for(int i=0; i<length; ++i)
+    {
+        for(int j=0; j<width; ++j)
+                cout << v[i][j]<< " ";
+        cout << endl;
+    }
 }
 
 /* Filter the results of fastUkkonen and do backtracking for remaining hits */
 void filterHitsAndBacktrack(vector<vector<int> > &pos_score, vector<vector<int> > &tmp_pos_score,
 		int &k, string &sequence, string &read, int &readNr, bool &filterResults){
 
-	int m = read.size();
-	int n = m + k;			// we only calculate an m+k wide part of the dp-matrix for backtracking (worst case: k gaps in the read)
+    
+    int m = read.size();
+    int n = m + k;			// we only calculate an m+k wide part of the dp-matrix for backtracking (worst case: k gaps in the read)
 
-	// filter and backtracking
-	if(tmp_pos_score.size() > 2){									// if there are any results (exept the two dummy-results added by fastUkkonen)
-		for(int unsigned pos=1; pos<(tmp_pos_score.size()-1); pos++){					// then for every result in tmp_pos_score
+    // filter and backtracking
+    if(tmp_pos_score.size() > 2){									// if there are any results (exept the two dummy-results added by fastUkkonen)
+        for(int unsigned pos=1; pos<(tmp_pos_score.size()-1); pos++){					// then for every result in tmp_pos_score
 
-			// filter to get only the best results in the neighborhood of a hit.
-			if(		(tmp_pos_score[pos][0] != tmp_pos_score[pos-1][0] + 1 &&      // if there is no hit in the direct neighborhood
-					tmp_pos_score[pos][0] != tmp_pos_score[pos+1][0] - 1)
-					||																// OR
-					(tmp_pos_score[pos][0] == tmp_pos_score[pos-1][0] + 1 &&		// if the the hit has two direct neighbors
-					tmp_pos_score[pos][0] == tmp_pos_score[pos+1][0] - 1 &&			// with equal or higher (worse) score --> local score minimum
-					tmp_pos_score[pos][1] <= tmp_pos_score[pos-1][1] &&
-					tmp_pos_score[pos][1] <= tmp_pos_score[pos+1][1]) || !filterResults){ // OR if the filter is turned off
+            // filter to get only the best results in the neighborhood of a hit.
+            if(		(tmp_pos_score[pos][0] != tmp_pos_score[pos-1][0] + 1 &&      // if there is no hit in the direct neighborhood
+                            tmp_pos_score[pos][0] != tmp_pos_score[pos+1][0] - 1)
+                            ||																// OR
+                            (tmp_pos_score[pos][0] == tmp_pos_score[pos-1][0] + 1 &&		// if the the hit has two direct neighbors
+                            tmp_pos_score[pos][0] == tmp_pos_score[pos+1][0] - 1 &&			// with equal or higher (worse) score --> local score minimum
+                            tmp_pos_score[pos][1] <= tmp_pos_score[pos-1][1] &&
+                            tmp_pos_score[pos][1] <= tmp_pos_score[pos+1][1]) || !filterResults){ // OR if the filter is turned off
 
-				string B_sequence = sequence.substr(tmp_pos_score[pos][0] - n, n);	// get a m+k long part of the genome sequence from known end-position of the hit
-				reverse(B_sequence.begin(), B_sequence.end());						// and reverse it
-				string B_read = read;												// make a copy of the read
-				reverse(B_read.begin(), B_read.end());								// and reverse it
+                string B_sequence = sequence.substr(tmp_pos_score[pos][0] - n, n);	// get a m+k long part of the genome sequence from known end-position of the hit
+                reverse(B_sequence.begin(), B_sequence.end());				// and reverse it
+                string B_read = read;                                                           // make a copy of the read
+                reverse(B_read.begin(), B_read.end());                                          // and reverse it
 
-				// run semiglobal alignment (normal smith waterman without ukkonen) for our new sequences (see fastUkkonen for code details)
-				int *cj = new int[m+1]; //  g++ doesnt liked int cj[m+1]
-				int cp, cn;
-				int min_score = k+1;
-				int min_score_pos=-1;
+                // run semiglobal alignment (normal smith waterman without ukkonen) for our new sequences (see fastUkkonen for code details)
+                int *cj = new int[m+1]; //  g++ doesnt liked 'int cj[m+1]'
+                int cp, cn;
+                int min_score = k+1;
+                int min_score_pos=-1;
 
-				for(int j=0; j<=m; j++){
-						cj[j] = j;
-				}
+                for(int j=0; j<=m; j++){
+                    cj[j] = j;
+                }
 
-				for(int i=1; i<=n; i++){
-					cn = 0; cp = 0;
-					for(int j=1; j<=m; j++){
-						if(B_sequence[i-1] == B_read[j-1]){ // match
-							cn = cp;
-						}else if(cp < cn || cj[j] < cn){
-							if(cp < cn){				// mismatch
-								cn = cp;
-							}
-							if(cj[j] < cn){				// gap in read
-								cn = cj[j];
-							}
-							cn++;
-						}else{							// gap in sequence
-							cn++;
-						}
-						cp = cj[j];
-						cj[j] = cn;
-					}
-					if(cj[m] < min_score){				// save the position of the minimal score in bottom row of the DP-matrix
-						min_score = cj[m];
-						min_score_pos = i;
-					}
-				}
-                                delete [] cj;// free reserved space for int-array
+                for(int i=1; i<=n; i++){
+                    cn = 0; cp = 0;
+                    for(int j=1; j<=m; j++){
+                        if(B_sequence[i-1] == B_read[j-1]){ // match
+                            cn = cp;
+                        }else if(cp < cn || cj[j] < cn){
+                            if(cp < cn){				// mismatch
+                                cn = cp;
+                                }
+                        if(cj[j] < cn){				// gap in read
+                            cn = cj[j];
+                        }
+                        cn++;
+                        }else{							// gap in sequence
+                            cn++;
+                        }
+                        cp = cj[j];
+                        cj[j] = cn;
+                    }
+                    if(cj[m] < min_score){				// save the position of the minimal score in bottom row of the DP-matrix
+                        min_score = cj[m];
+                        min_score_pos = i;
+                    }
+                }
+                delete [] cj;// free reserved space for int-array
 
-				// start_pos of the hit is the known end_pos minus the min_score_pos we just calculated
-				int start_pos = tmp_pos_score[pos][0] - min_score_pos;
-				int end_pos = tmp_pos_score[pos][0];
-				int score = tmp_pos_score[pos][1];
-				vector<int> scoreVector(4,0);			// fill a result vector with: (read Nr., start position, end position, score)
-				scoreVector[0] = readNr; scoreVector[1] = start_pos; scoreVector[2] = end_pos; scoreVector[3] = score;
-				pos_score.push_back(scoreVector);		// save it in pos_score
-
-			}//end if
-
-		}//end for
-	}//end if
-
+                // start_pos of the hit is the known end_pos minus the min_score_pos we just calculated
+                int start_pos = tmp_pos_score[pos][0] - min_score_pos;
+                int end_pos = tmp_pos_score[pos][0];
+                int score = tmp_pos_score[pos][1];
+                vector<int> scoreVector(4,0);			// fill a result vector with: (read Nr., start position, end position, score)
+                scoreVector[0] = readNr; scoreVector[1] = start_pos; scoreVector[2] = end_pos; scoreVector[3] = score;
+                pos_score.push_back(scoreVector);		// save it in pos_score
+            }//end if
+        }//end for
+    }//end if
     cout<<"Procedure 'filterHitsAndBacktrack' for read Nr. "<< readNr<< " done!" <<endl;
 }
 
@@ -227,97 +216,91 @@ void filterHitsAndBacktrack(vector<vector<int> > &pos_score, vector<vector<int> 
 void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence, string &read, bool &useUkkonenTrick){
 
 	int m,n;
-	int lact = k+1;												// initialize last active cell indicator
-	m= read.size();												// initialize 'sequence' and 'read' size
+	int lact = k+1;									// initialize last active cell indicator
+	m= read.size();									// initialize 'sequence' and 'read' size
 	n= sequence.size();
 
-        int *cj=new int[m+1];												// int-vector cj is more or less a column of the DP-matrix. 'vector<int>' was not choosed, becaused it slowed the procedure
-	int cp, cn;													// single integer values for storage of other DP-matrix cell values
+        int *cj=new int[m+1];							// int-vector cj is more or less a column of the DP-matrix. 'vector<int>' was not chosen, becaused it slowed the procedure down
+	int cp, cn;                                                                      // single integer values for storage of other DP-matrix cell values
 
 	tmp_pos_score.push_back(vector<int>(2,-5));					// initialize temporary result vector with a "dummy" entry (used for filtering)
 
-	for(int j=0; j<=m; j++){									// initialize our DP-matrix column
-		cj[j] = j;
+	for(int j=0; j<=m; j++){							// initialize our DP-matrix column
+            cj[j] = j;
 	}
 
 	// Smith-Waterman WITH Ukkonen-trick
 	if(useUkkonenTrick){
 
 	for(int i=1; i<=n; i++){					// for every character of 'sequence'
+            cp = 0; cn = 0; 							// set cp and cn zero (correspond to entries [i-1] [0] and [i] [0] of the DP-matrix here
 
-		cp = 0; cn = 0; 							// set cp and cn zero (correspond to entries [i-1] [0] and [i] [0] of the DP-matrix here
+            for(int j=1; j<=lact; j++){					// for characters of 'read' until last active cell
 
-		for(int j=1; j<=lact; j++){					// for characters of 'read' until last active cell
+                
+                if(sequence[i-1] == read[j-1]){ // match
+                        cn = cp;
+                }else{
 
-			if(sequence[i-1] == read[j-1]){ // match
-				cn = cp;
-			}else{
-				if(cp < cn){				// mismatch
-					cn = cp;
-				}
-				if(cj[j] < cn){				// gap in read
-					cn = cj[j];
-				}
-				cn++;						// else: gap in sequence
-			}
-			cp = cj[j];
-			cj[j] = cn;
-		}
-
-		// after calculation of the column actualize the lact indicator
-		while(cj[lact] > k){	// reduce lact until last active cell has score lower than k (no need to calculate mor of the column next time)
-			lact--;
-		}
-		if(lact == m){								// if lact == m we have a hit !!
-			int pos_end = i;											// end pos of the match is i
-			int score = cj[lact];										// score is saved in the last(bottom) cell of cj
-			vector<int> tmp_scoreVector(2,0);							// fill a temporary result vector with this info
-			tmp_scoreVector[0] = pos_end; tmp_scoreVector[1] = score;
-			tmp_pos_score.push_back(tmp_scoreVector);
-		}else{										// if lact < m we have to increase it by one
-			lact++;
-		}
+                    if(cp < cn){				// mismatch
+                        cn = cp;
+                    }
+                    if(cj[j] < cn){				// gap in read
+                        cn = cj[j];
+                    }
+                    cn++;						// else: gap in sequence
+                }
+                cp = cj[j];
+                cj[j] = cn;
+            }
+            // after calculation of the column actualize the lact indicator
+            while(cj[lact] > k){	// reduce lact until last active cell has score lower than k (no need to calculate mor of the column next time)
+                lact--;
+            }
+            if(lact == m){								// if lact == m we have a hit !!
+                int pos_end = i;						// end pos of the match is i
+                int score = cj[lact];						// score is saved in the last(bottom) cell of cj
+                vector<int> tmp_scoreVector(2,0);				// fill a temporary result vector with this info
+                tmp_scoreVector[0] = pos_end; tmp_scoreVector[1] = score;
+                tmp_pos_score.push_back(tmp_scoreVector);
+            }else{										// if lact < m we have to increase it by one
+                lact++;
+            }
 	}
 
 	// Smith-Waterman WITHOUT Ukkonen-trick
 	}else{
 
-	for(int i=1; i<=n; i++){					// for every character of 'sequence'
+            for(int i=1; i<=n; i++){					// for every character of 'sequence'
 
-			cn = 0; cp = 0;							// set cp and cn zero (correspond to entries [i-1] [0] and [i] [0] of the DP-matrix here
-
-			for(int j=1; j<=m; j++){					// for all characters of 'read'
-
-				if(sequence[i-1] == read[j-1]){ // match
-					cn = cp;
-				}else{
-					if(cp < cn){				// mismatch
-						cn = cp;
-					}
-					if(cj[j] < cn){				// gap in read
-						cn = cj[j];
-					}
-					cn++;						// else: gap in sequence
-				}
-				cp = cj[j];
-				cj[j] = cn;
-			}
-
-			if(cj[m] <= k){													// if cj[m] <= k we have a hit !!
-				int pos_end = i;											// end pos of the match is i
-				int score = cj[m];											// score is saved in the last(bottom) cell of cj
-				vector<int> tmp_scoreVector(2,0);							// fill a temporary result vector with this info
-				tmp_scoreVector[0] = pos_end; tmp_scoreVector[1] = score;
-				tmp_pos_score.push_back(tmp_scoreVector);
-			}
-		}
-
+                cn = 0; cp = 0;						// set cp and cn zero (correspond to entries [i-1] [0] and [i] [0] of the DP-matrix here
+                for(int j=1; j<=m; j++){				// for all characters of 'read'
+                    if(sequence[i-1] == read[j-1]){ // match
+                        cn = cp;
+                    }else{
+                        if(cp < cn){				// mismatch
+                            cn = cp;
+                        }
+                        if(cj[j] < cn){				// gap in read
+                            cn = cj[j];
+                        }
+                        cn++;						// else: gap in sequence
+                    }
+                    cp = cj[j];
+                    cj[j] = cn;
+                }
+                if(cj[m] <= k){								// if cj[m] <= k we have a hit !!
+                    int pos_end = i;						// end pos of the match is i
+                    int score = cj[m];						// score is saved in the last(bottom) cell of cj
+                    vector<int> tmp_scoreVector(2,0);				// fill a temporary result vector with this info
+                    tmp_scoreVector[0] = pos_end; tmp_scoreVector[1] = score;
+                    tmp_pos_score.push_back(tmp_scoreVector);
+                }
+            }
 	}//end else
-
 	tmp_pos_score.push_back(vector<int>(2,-5));		// add another "dummy" entry at the end of the temporary result vector
         delete [] cj; // free reserved space for int-array
 }
-
 
 /* Function to write the results according to the given format */
 void writeOutput(vector<vector<int> > &pos_score2)
@@ -326,14 +309,10 @@ void writeOutput(vector<vector<int> > &pos_score2)
     string sep = ","; // symbor for separtion
     string nl = "\n"; // new line
     int m=pos_score2.size(); // number of rows
-    
     try
     {
-//      outfile<<"<id>, <start>, <end>, <errors>"<<nl; // headline (not required)
-        
         for (int i = 0; i < m; i++) 
             outfile<<"read_"<<pos_score2[i][0]<<sep<<pos_score2[i][1]<<sep<<pos_score2[i][2]<<sep<<pos_score2[i][3]<<nl;
-
         outfile.close();
     }catch(exception e)
     {
@@ -351,57 +330,42 @@ int main(int argc, char**argv) {
     bool useUkkonenTrick; //indicates whether the ukkonen trick will be used or not. 
     bool filterResults = true; // default value for filtering
 
-    /* --- print the arguments. @TODO: To be uncomment for the final version ----  */
-    /* Please: DO NOT DELETE! */
-//    string ukk="without";
-//    if (argc > 1) {
-//        cout << endl << "---- Introduced arguments ----" << endl;
-//        for (int i = 1; i < argc; i++) {
-//            switch (i){
-//                case 1:
-//                    cout <<"Genome's file:" << "\t" << argv[1] << endl;
-//                    break;
-//                case 2:
-//                    cout <<"Reads file:" << "\t" << argv[2] << endl;
-//                    break;
-//                case 3:
-//                    cout <<"Nr. of allowed erros:" << "\t" << argv[3] << endl;
-//                    break;
-//                case 4:
-//                    if(atoi(argv[4])==1)
-//                        ukk="with";                        
-//                    cout <<"with/without Ukkonen?" << "\t" << ukk << endl;
-//                    break;
-//                default:
-//                    cout<<"undefined input"<< "\t" <<argv[i]<<endl;
-//                    break;
-//            }
-//                 
-//        }
-//    }
-//    if(argc<5)
-//        cout<<"WARNING: not enough arguments given!"<<endl;
-//    /* set given arguments */
-//    genome_file = argv[1];
-//    reads_file = argv[2];
-//    k = atoi(argv[3]); // number of errors
-//    useUkkonenTrick = (atoi(argv[4])==1); // Only value 1 sets it true, all other input values make it false.
-    /* --------------------- end of block ----------------------------------*/
+    /* Print the arguments */
+    string ukk="without";
+    if (argc > 1) {
+        cout << "Welcome..."<<endl << "---- Introduced arguments ----" << endl;
+        for (int i = 1; i < argc; i++) {
+            switch (i){
+                case 1:
+                    cout <<"Genome's file:" << "\t" << argv[1] << endl;
+                    break;
+                case 2:
+                    cout <<"Reads file:" << "\t" << argv[2] << endl;
+                    break;
+                case 3:
+                    cout <<"Nr. of allowed erros:" << "\t" << argv[3] << endl;
+                    break;
+                case 4:
+                    if(atoi(argv[4])==1)
+                        ukk="with";                        
+                    cout <<"with/without Ukkonen?" << "\t" << ukk << endl;
+                    break;
+                default:
+                    cout<<"undefined input"<< "\t" <<argv[i]<<endl;
+                    break;
+            }
+        }
+    }
+    if(argc<5)
+        cout<<"WARNING: not enough arguments given!"<<endl;
+    /* set given arguments */
+    genome_file = argv[1];
+    reads_file = argv[2];
+    k = atoi(argv[3]); // number of errors
+    useUkkonenTrick = (atoi(argv[4])==1); // Only value 1 sets it true, all other input values make it false.
     
-    /* ------ Input block for the working phase.------------------------------
-     * -------@TODO: To be erased/commented before checking -----*/
-    string fileNames[]={"random10M.fasta","random10M_reads50_100.fasta","random10M_reads50_1k.fasta",
-    "random10M_reads100_100.fasta","random10M_reads100_1k.fasta",
-    "random10M_reads400_100.fasta","random10M_reads400_1k.fasta"}; // 7 given test files
-
-    genome_file=fileNames[0];
-    reads_file=fileNames[6];
-    k=3;
-    useUkkonenTrick = true;
-    filterResults = true;
-    /* ------------------------------------------------------------------------*/
-
     /* Read fasta files*/
+    cout <<"---- Reading ----" << endl;
     string genome = readGenome(genome_file);
     int m = getNrOfReads(reads_file); // number of reads 
     vector<string> reads(m, "" );
@@ -412,19 +376,17 @@ int main(int argc, char**argv) {
     cout <<"Pattern's size: "<< reads[0].size()<<endl;
 
 
-
-    m= 40; // number of reads, modify it if you dont want to compute all of them @TODO: delete it for the final version :)
-    vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
-
     /* main process for the computation of m reads */
-    for(int readNr = 0; readNr < m; readNr++){							// run ukkonen for readNr many reads, save all scores in pos_score
+    vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
+    cout <<"---- Starting computation ----" << endl;
+    for(int readNr = 0; readNr < m; readNr++){				// run ukkonen for readNr many reads, save all scores in pos_score
     	vector<vector<int> > tmp_pos_score;
     	fastUkkonen(tmp_pos_score, k, genome, reads[readNr], useUkkonenTrick);
     	filterHitsAndBacktrack(pos_score, tmp_pos_score, k, genome, reads[readNr], readNr, filterResults);
     }
 
+    /* Ending */
     cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
-    printTable(pos_score); // @TODO: delete/comment it before deadline
     writeOutput(pos_score); // export of the results
     time_int(1); // print out elapsed time
     return 0;
