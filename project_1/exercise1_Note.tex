@@ -53,32 +53,39 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
-The computation of a semi global alignment with dynamic programming is the same as to perform the \textit{Smith-Waterman} algorithm with the difference 
-that the initial gap costs for one of the sequences are not equal to zero. Moreover it computes the minimum instead of the maximum for each cell.\\
+The computation of a semi global alignment with dynamic programming is the same as to perform the
+\textit{Smith-Waterman} algorithm, with the difference, that the initial gap costs for one of the sequences are not
+equal to zero. Moreover it computes the minimum instead of the maximum for each cell.\\
 
 \subsection{Smith-Waterman}
-We used a Smith-Waterman implementation very similar to the pseudo code found in the lecture skript. One Column of the DP-matrix is stored as an integer array
-of length $m$ (the length of the read) at any time during the algorithm. Two additional single integer variables (Cn and Cp) are used to store temporary values
-for the score minimizing function.\\
-The memory consumption for this implementation is in $O(m)$ and it prooved to be considerably faster than any previous attempts using {\it vector} or {\it list} based data structures for the matrix.\\
-One disadvantage of this implementation is the lack of a complete matrix for backtracking since only one column is saved. We solved this problem
-by simply using the same algorithm backwards from the known end position of every confirmed hit from the forward run. For every hit we had to compute an additional $m*(m+k)$ big DP-matrix
-considering the worst case of a hit with $k$ errors having k gaps introduced in the {\it read} sequence. We did not save the backtracking trace since we are only interested
-in the start position of a hit and not in the actual alignment. \\
-Since we filter suboptimal hits (caused by the 'shifting' read sequence across the optimal site) before this step, the computational overhead for the additional matrices is 
-negligible if $k$ is not chosen too high.\\
+We used a Smith-Waterman implementation very similar to the pseudo code found in the lecture script. One Column of the
+DP-matrix is stored as an integer array of length $m$ (the length of the read) at any time during the algorithm. Two
+additional single integer variables (Cn and Cp) are used to store temporary values for the score minimizing function.\\
+The memory consumption for this implementation is in $O(m)$ and it proved to be considerably faster than any previous
+attempts using {\it vector} or {\it list} based data structures for the matrix.\\
+One disadvantage of this implementation is the lack of a complete matrix for backtracking since only one column is
+saved. We solved this problem by simply using the same algorithm backwards from the known end position of every
+confirmed hit from the forward run. For every hit we had to compute an additional $m\cdot (m+k)$ big DP-matrix
+considering the worst case of a hit with $k$ errors having k gaps introduced in the {\it read} sequence. We did not save
+the backtracking trace since we are only interested in the start position of a hit and not in the actual alignment. \\
+Since we filter suboptimal hits (caused by the 'shifting' read sequence across the optimal site) before this step, the
+computational overhead for the additional matrices is negligible if $k$ is not chosen too high.\\
  
 \subsection{Ukkonen Trick}
-The Ukkonen trick was implemented exactly like in the skript pseudo code by only computing the current column up to a 'last active cell' which is updated for every new column in 
-constant amortized time. Since the last active cell is defined by the last score in the column that is better than or equal to $k$, the algorithms complexity changes from $O(n*m)$ to $O(n*k)$.\\
-Our results confirm a large decrease in run time with the Ukkonen trick compared to the unmodified Smith-Waterman algorithm.
+The Ukkonen trick was implemented exactly like in the script pseudo code by only computing the current column up to a
+'last active cell' which is updated for every new column in constant amortized time. Since the last active cell is
+defined by the last score in the column that is better than or equal to $k$, the algorithms complexity changes from
+$O(n\cdot m)$ to $O(n\cdot k)$.\\
+Our results confirm a large decrease in run time with the Ukkonen trick - compared to the unmodified Smith-Waterman
+algorithm.
 
 % #######################################################################################
 \section{Results/Observations}
-We expect running times in order of $\mathcal{O}(m  n)$ (classical approach) and $\mathcal{O}(k  n)$ ( Ukkonen's algorithm) with $n=$ text length, $m=$ pattern length and $k=$ number of allowed errors.
-In fact, the running time is reduced extremely if the program uses the Ukkonen's trick.
+We expect runtimes in order of $\mathcal{O}(m  n)$ (classical approach) and $\mathcal{O}(k  n)$ ( Ukkonen's algorithm)
+with $n=$ text length, $m=$ pattern length and $k=$ number of allowed errors.
+In fact, the runtime is reduced extremely, if the program uses the Ukkonen's trick.
 
-With $k=0$ and filtering the results, i.e., suboptimal alignments were ignored,  following running times were noted:\\
+With $k=0$ and filtering the results, i.e., suboptimal alignments were ignored, following runtimes were noted:\\
 \begin{center}
 \begin{tabular}{c|c|r||c|c}
 \toprule
@@ -108,14 +115,26 @@ With $k=0$ and filtering the results, i.e., suboptimal alignments were ignored, 
 \end{center}
 
 
-Program 'exercise1' was executed on the linux machine \textit{andorra}\footnote{andorra.imp.fu-berlin.de}.  The \textit{Razers}\footnote{Version: 'RazerS\_20100618', called without any options} program ran on a windows machine, since the supplied binary file (\textit{razers3}) could not get started under linux.
+Program 'exercise1' was executed on the linux machine \textit{andorra}\footnote{andorra.imp.fu-berlin.de}.  The
+\textit{Razers}\footnote{Version: 'RazerS\_20100618', called without any options} program ran on a windows machine,
+since the supplied binary file (\textit{razers3}) could not get started under linux.
 
-The values of the table above can be interpreted as a lower bound for the running time of the respective data sets. With increasing $k$ the complexity will obviously also increase, since more occurrences will be found  than in the case of perfect matching ($k=0$). Thus more DP-matrices as well as more cell values within the \textit{Ukkonen} algorithm have to be calculated. \\
-E.g. $28.89$s and $52$ occurrences, $42.35$s and $79$ or $51.55$s and $108$ occurrences were observed by running the first data set with \textit{Ukkonnen} trick and $k \in \{1,2,3\}$ respectively (to mention some of these expected increases).
+The values of the table above can be interpreted as a lower bound for the running time of the respective data sets. With
+increasing $k$ the complexity will obviously increase, too - since more occurrences will be found than in the case of
+perfect matching ($k=0$). Thus more DP-matrices as well as more cell values within the \textit{Ukkonen} algorithm need
+to be calculated. \\
+E.g. $28.89$s and $52$ occurrences, $42.35$s and $79$ or $51.55$s and $108$ occurrences were observed by running the
+first data set with \textit{Ukkonnen} trick and $k \in \{1,2,3\}$ respectively (to mention some of these expected increases).
 
-\textit{Razers} was always faster than our cpp-program, even if it calculates more start positions: with default values it computes the start positions for reads up to a so called 'percent identity threshold' of 92. That means, that the allowed number of errors varies depending on the read's length. Using the last version and/or evoking the program with additional options, so that only the calculation for a given $k$ are effectuated, would allow the program to run even faster.
+\textit{Razers} was always faster than our cpp-program. Even if \textit{Razers} calculates more start positions: With
+default values it computes the start positions for reads up to a so called 'percent identity threshold' of 92. That
+means the allowed number of errors varies depending on the read's length. Using the last version and/or evoking the
+program with additional options, so that only the calculation for a given $k$ are effectuated, would allow the program
+to run even faster.
 
-Regarding the accuracy of the program's calculations, we could establish that the number of and the occurrences themselves were the same in all cases. This was observed by filtering the reads that match perfect ($k=0$), i.e., considering only the reads with entries equal to 100 in the last column.   
+Regarding the accuracy of the program's calculations, we could establish that the number of and the occurrences
+themselves were the same in all cases. This was observed by filtering the reads that match perfect ($k=0$), i.e.,
+considering only the reads with entries equal to 100 in the last column.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
