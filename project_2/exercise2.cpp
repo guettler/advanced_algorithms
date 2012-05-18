@@ -9,11 +9,14 @@
 #include <vector>
 #include <algorithm>
 #include <sys/time.h>
+#include <bitset>
+#include <math.h>
 
 using namespace std;
 #define match 0
 #define mismatch  1
 #define gap 1
+#define Q 12    // maximal expected value for q
 
 /* Function prototypes (instead of header file)*/
 string readGenome(string &path);
@@ -27,6 +30,9 @@ void filterHitsAndBacktrack(vector<vector<int> > &pos_score, vector<vector<int> 
 		int &k, string &sequence, string &read, int &readNr, bool &filterResults);
 void writeOutput(vector<vector<int> > &pos_score2);
 void firstTerminateWrite();
+/* @TODO: complete section with the declaration of new functions */
+
+
 /* Function definitions */
 string readGenome(string &path)
 {
@@ -320,20 +326,130 @@ void writeOutput(vector<vector<int> > &pos_score2)
             cout << e.what() << endl;
     }
 }
-void firstTerminateWrite(){
+/* write a warning message in the result file according to the given case */
+void writeAndTerminate(int termination_case){
     ofstream outfile("hits.result"); // creates a file to write in
-    outfile<<"read length exceeds block size";
+    if(termination_case==1)
+    {
+        outfile<<"read length exceeds block size";
+        cout<<"WARNING: 1st abort condition detected => program will terminate..."<<endl;
+    }
+    else if(termination_case==2)
+    {
+        outfile<<"Bad choice of k and q for input read length";
+        cout<<"WARNING: 2nd abort condition detected => program will terminate..."<<endl;
+    }
     outfile.close();
 }
+void convBase(char &input, int &output)
+{
+    switch(input){
+        case 'A':
+            output=0;
+            break;
+        case 'C':
+            output=1;
+            break;
+        case 'G':
+            output=2;
+            break;
+        case 'T':
+            output=3;
+            break;
+        default:
+            output=-1;
+    }
+}
+/* Given a number (permunation id) compute the corresponding string(nucleotide 
+ * sequence) of length q
+ * works up to q=12*/
+string getQGramFromIndex(int id,  int &q)
+{
+    string sigma="ACGT";
+    bitset< (2*Q) > permutation(id);
+//    cout<<"permuataion: "<<permutation<<endl;
+    bitset<2> tmp; // bit representation of one nucleotide
+    string seq;
+    int j;
+    for (int i =(2*q-1); i>0; i-=2) {
+        tmp[1]=permutation[i];
+        tmp[0]=permutation[i-1];
 
+        j=tmp.to_ulong();
+        seq.append(sigma,j,1);
+    }
+    return seq;
+    
+}
+/* check whether all expected occurences were found */
+void allOccurencesFound(string &seq, int nr_occ[],int &q, int &nr_rows)
+{
+    int counter=0;
+    for (int i = 0; i < nr_rows; i++) {
+        counter+= nr_occ[i];
+    }
+    int expected= seq.size()-q+1;
+    if(expected==counter)
+        cout<<"All occurences were found!"<<endl;
+    else
+        cout<<"Warning: expected: "<<expected<<", founded: "<<counter<<endl;
+
+}
+/* Scan an input sequence counting the occurrence of the found permutations and 
+ saving their positions in a vector */
+void getNrOfOccAndPositions(string &seq, int *output, vector<vector<int> > &occ, int &q){
+    
+    bitset<2*Q> bit_array;  // all entries equal 0
+    int base_id; // nr in the range (0,3)
+    int permutation_id;
+    /* read initial q positions of the sequence*/
+    for (int i = 0; i < q; i++) {
+        convBase(seq[i],base_id);
+        bit_array=bit_array<<2 |bitset<2*Q>(base_id);
+    }
+    permutation_id=bit_array.to_ulong();
+    output[permutation_id]++; // increment the occurence of the given q-gram
+    occ[permutation_id].push_back(0);
+//    cout<<permutation_id<<endl;
+    
+    /* same as above, for the rest of the sequence */
+    for (unsigned int i = q; i < seq.size(); i++) {
+        convBase(seq[i],base_id);
+        bit_array=bit_array<<2 |bitset<2*Q>(base_id);
+//        cout<<"i: "<<i<< "bit_array: "<<bit_array<<endl;
+        if(q<Q)
+        {
+            bit_array.set((q*2),0);
+            bit_array.set((q*2+1),0);
+//            cout<<"bitarray: "<<bit_array<<endl;
+        }
+        permutation_id=bit_array.to_ulong();
+//        cout<<"Permutation id :"<<permutation_id<<endl;
+        output[permutation_id]++;
+        occ[permutation_id].push_back(i-q+1);
+//        cout<<"Output at: "<<output[permutation_id]<<endl;
+    }
+}
+/* Initializes an integer array with a given value. Implemented since the array
+ * initializations with constructor are not reliable */
+void initializeIntArray(int *arr, int &nr_of_elements, int value)
+{
+    for (int i = 0; i < nr_of_elements; i++)
+        arr[i] = value;
+}
+void printIntArray(int v[], int size)
+{
+    for(int i=0; i< size; ++i)
+        cout << "["<<i<<"] "<<v[i]<< " "<<endl;
+}
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
     time_int(0); // start timing
     string genome_file, reads_file;
-    int k,q,b; 
+    int k,q,b,threshold,w; 
     bool useUkkonenTrick=true; //indicates whether the ukkonen trick will be used or not. 
     bool filterResults = true; // default value for filtering
-//./exercise2 <genome.fasta> <reads.fasta> <k> <q> <b> 
+// format: ./exercise2 <genome.fasta> <reads.fasta> <k> <q> <b> 
     /* Print the arguments */
     if (argc > 1) {
         cout << "Welcome..."<<endl << "---- Introduced arguments ----" << endl;
@@ -359,17 +475,32 @@ int main(int argc, char**argv) {
                     break;
             }
         }
-    }
-    if(argc<6)
-        cout<<"WARNING: not enough arguments given!"<<endl;
-    /* set given arguments */
-    genome_file = argv[1];
-    reads_file = argv[2];
-    k = atoi(argv[3]); // number of errors
-    q=atoi(argv[4]);// length of the q-grams
-    b = atoi(argv[5]); // block size for the genome
-//    useUkkonenTrick = (atoi(argv[4])==1); // Only value 1 sets it true, all other input values make it false.
     
+        if(argc<6)
+            cout<<"WARNING: not enough arguments given!"<<endl;
+        /* set given arguments */
+        genome_file = argv[1];
+        reads_file = argv[2];
+        k = atoi(argv[3]); // number of errors
+        q = atoi(argv[4]);// length of the q-grams
+        b = atoi(argv[5]); // block size for the genome
+    } 
+    /* ------ Input block for the working phase.------------------------------        
+     * -------To be erased before checking -----*/
+    else if(argc==1) // if no arguments are given by running the progam. 
+    {
+        string fileNames[]={"random10M.fasta","random10M_reads50_100.fasta","random10M_reads50_1k.fasta",
+        "random10M_reads100_100.fasta","random10M_reads100_1k.fasta",
+        "random10M_reads400_100.fasta","random10M_reads400_1k.fasta"}; // 7 given test files
+
+        genome_file=fileNames[0];
+        reads_file=fileNames[6];
+        k=0;
+        q= 0;
+        b=400;    
+    }
+    /* ------------------------------------------------------------------------*/
+   
     /* Read fasta files*/
     cout <<"---- Reading ----" << endl;
     string genome = readGenome(genome_file);
@@ -381,24 +512,49 @@ int main(int argc, char**argv) {
     cout <<"Text's size: "<< genome.size()<<endl;
     cout <<"Pattern's size: "<< reads[0].size()<<endl;
 
-    /* check for 1st and 2nd? abort condition */
-    if(b<reads[0].size()) //block size is smaller than the read length
-        firstTerminateWrite(); // write a warning and terminate (jump to the end)
+    /* check for 1st and 2nd abort condition */
+    w=reads[0].size();
+    threshold = w+1-(k+1)*q; //lemma 2 (q-gramm)
+    cout<<"Computed threshold: "<<threshold<<endl;
+    if(b<w) //block size is smaller than the read length
+        writeAndTerminate(1); // write a warning and terminate (jump to the end)
+    else if(threshold<=0)
+        writeAndTerminate(2);
+   
     else
     {
+        /* MAIN */
+        int nr_of_rows=(int)pow(4,q); //expected nr of permutation of a sequence of length q
 
+        // allocate int array and vector for the scan
+        int *nr_of_occ=new int[nr_of_rows](); // initialized with zero
+        initializeIntArray(nr_of_occ,nr_of_rows,0); // ensures that the array was initialized with 0
+        vector<vector<int> > occurrences(nr_of_rows); // to save the start positions
+        
+        getNrOfOccAndPositions(genome,nr_of_occ,occurrences,q); // scan the given sequence and save nr of occurrences as well their positions
+        
+        
+        /* @TODO: counting q-grams, blocking, etc*/
+        
+        
+        
         /* main process for the computation of m reads */
-        vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
-        cout <<"---- Starting computation ----" << endl;
-        for(int readNr = 0; readNr < m; readNr++){				// run ukkonen for readNr many reads, save all scores in pos_score
-            vector<vector<int> > tmp_pos_score;
-            fastUkkonen(tmp_pos_score, k, genome, reads[readNr], useUkkonenTrick);
-            filterHitsAndBacktrack(pos_score, tmp_pos_score, k, genome, reads[readNr], readNr, filterResults);
-        }
-
-        /* Ending */
-        cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
-        writeOutput(pos_score); // export of the results
+        // @TODO: to be adapted according to: "For each block where the matches 
+        // exceed the threshold (q-gram Lemma) use the semi-global aligner from Exercise 1 for verification." 
+//        vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
+//        cout <<"---- Starting computation ----" << endl;
+//        for(int readNr = 0; readNr < m; readNr++){				// run ukkonen for readNr many reads, save all scores in pos_score
+//            vector<vector<int> > tmp_pos_score;
+//            fastUkkonen(tmp_pos_score, k, genome, reads[readNr], useUkkonenTrick);
+//            filterHitsAndBacktrack(pos_score, tmp_pos_score, k, genome, reads[readNr], readNr, filterResults);
+//        }
+//
+//        /* Ending */
+//        cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
+//        writeOutput(pos_score); // export of the results
+        
+        allOccurencesFound(genome,nr_of_occ,q,nr_of_rows);
+        //delete [] nr_of_occ; // may be not necessary since program terminates and the allocated space will be erased anyway 
     }
     time_int(1); // print out elapsed time
     return 0;
