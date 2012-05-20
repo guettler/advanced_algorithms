@@ -25,7 +25,7 @@ void readReads(string &path, vector<string> &reads);
 void time_int(int print);
 void printVector(vector<int>  &v);
 void printTable(vector<vector<int> > &v);
-void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence, string &read, bool &useUkkonenTrick);
+void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence,int &block_start, int &block_end, string &read, bool &useUkkonenTrick);
 void filterHitsAndBacktrack(vector<vector<int> > &pos_score, vector<vector<int> > &tmp_pos_score,
 		int &k, string &sequence, string &read, int &readNr, bool &filterResults);
 void writeOutput(vector<vector<int> > &pos_score2);
@@ -219,12 +219,13 @@ void filterHitsAndBacktrack(vector<vector<int> > &pos_score, vector<vector<int> 
 }
 
 /* Ukkonen algorithm implemented with one int array and single integer values, see lecture 2 script for pseudo code */
-void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence, string &read, bool &useUkkonenTrick){
+void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence,int &block_start, int &block_end, string &read, bool &useUkkonenTrick){
 
 	int m,n;
 	int lact = k+1;									// initialize last active cell indicator
 	m= read.size();									// initialize 'sequence' and 'read' size
-	n= sequence.size();
+//	n= sequence.size();
+	n= block_end;
 
         int *cj=new int[m+1];							// int-vector cj is more or less a column of the DP-matrix. 'vector<int>' was not chosen, becaused it slowed the procedure down
 	int cp, cn;                                                                      // single integer values for storage of other DP-matrix cell values
@@ -238,7 +239,8 @@ void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence, 
 	// Smith-Waterman WITH Ukkonen-trick
 	if(useUkkonenTrick){
 
-	for(int i=1; i<=n; i++){					// for every character of 'sequence'
+//	for(int i=1; i<=n; i++){					// for every character of 'sequence'
+	for(int i=block_start+1; i<=n; i++){					// for every character of 'sequence'
             cp = 0; cn = 0; 							// set cp and cn zero (correspond to entries [i-1] [0] and [i] [0] of the DP-matrix here
 
             for(int j=1; j<=lact; j++){					// for characters of 'read' until last active cell
@@ -277,6 +279,7 @@ void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence, 
 	// Smith-Waterman WITHOUT Ukkonen-trick
 	}else{
 
+//            for(int i=1; i<=n; i++){					// for every character of 'sequence'
             for(int i=1; i<=n; i++){					// for every character of 'sequence'
 
                 cn = 0; cp = 0;						// set cp and cn zero (correspond to entries [i-1] [0] and [i] [0] of the DP-matrix here
@@ -442,11 +445,133 @@ void printIntArray(int v[], int size)
     for(int i=0; i< size; ++i)
         cout << "["<<i<<"] "<<v[i]<< " "<<endl;
 }
+void printIntTable(int **v, int rows, int columns)
+{
+
+    for(int i=0; i< rows; ++i){
+        cout << "["<<i<<"] ";
+        for (int j = 0; j < columns; j++) 
+            cout<< v[i][j]<< " ";
+        cout<<endl;
+        
+    }
+
+}
+/* Input, output 
+ nr_of_blocks correspond to the number of rows*/
+void calculateBocksRange(int **blocks_limits,int &seq_length, int nr_of_blocks, int block_length,int &min_overlap){
+int expansion_left, expansion_right;
+expansion_right = min_overlap/2;        //same as floor()
+expansion_left = min_overlap - expansion_right;
+
+blocks_limits[0][0] = 0;
+blocks_limits[0][1] = block_length-1 +expansion_right;
+for (int i = 1; i < nr_of_blocks; i++) {
+    blocks_limits[i][0] = i*block_length - expansion_left;
+    blocks_limits[i][1] = (i+1)*block_length-1 + expansion_right;
+    }
+
+// correction/adjust or the ending position of the last block
+//blocks_limits[nr_of_blocks-1][1]= nr_of_blocks*block_length - 1;
+blocks_limits[nr_of_blocks-1][1]= seq_length-1;
+
+
+
+}
+/* similar to getNrOfOccAndPositions*/
+void calculateOccPerBlock(string &read, vector<vector<int> > &occ, int &q, int nr_of_blocks, int block_length, int **blocks_range, int *block_counter){
+    
+    bitset<2*Q> bit_array;  // all entries equal 0
+    int base_id; // nr in the range (0,3)
+    int permutation_id, nr_of_occ, q_start,q_end;
+    int expected_block_index,block_begin, block_end;
+
+    /* read initial q positions of the sequence*/
+    for (int i = 0; i < q; i++) {
+        convBase(read[i],base_id);
+        bit_array=bit_array<<2 |bitset<2*Q>(base_id);
+    }
+    permutation_id=bit_array.to_ulong();
+    nr_of_occ=occ[permutation_id].size();
+    if(nr_of_occ>0){
+        for (int i = 0; i < nr_of_occ; i++) {
+            q_start= occ[permutation_id][i];
+            q_end= q_start+q-1;
+            expected_block_index= q_start/block_length;
+            
+            /* increase counter of the corresponding block, for simplicity all 3 cases
+             are checked: actual block, overlap left and overlap right */
+            block_begin=blocks_range[expected_block_index][0];
+            block_end=blocks_range[expected_block_index][1];
+            
+            if(q_start>=block_begin && q_end<=block_end)        // current block
+                block_counter[expected_block_index]++;
+            
+            if(expected_block_index>0){                         // block left
+                block_begin=blocks_range[expected_block_index-1][0];
+                block_end=blocks_range[expected_block_index-1][1];
+                if(q_start>=block_begin && q_end<=block_end)
+                    block_counter[expected_block_index-1]++;
+            }
+            if(expected_block_index<nr_of_blocks-1){            // block right
+                block_begin=blocks_range[expected_block_index+1][0];
+                block_end=blocks_range[expected_block_index+1][1];
+                if(q_start>=block_begin && q_end<=block_end)
+                    block_counter[expected_block_index+1]++;
+            }
+        }
+    }
+    
+   
+    /* same as above, for the rest of the sequence */
+    for (unsigned int i = q; i < read.size(); i++) {
+        convBase(read[i],base_id);
+        bit_array=bit_array<<2 |bitset<2*Q>(base_id);
+//        cout<<"i: "<<i<< "bit_array: "<<bit_array<<endl;
+        if(q<Q)
+        {
+            bit_array.set((q*2),0);
+            bit_array.set((q*2+1),0);
+//            cout<<"bitarray: "<<bit_array<<endl;
+        }
+        permutation_id=bit_array.to_ulong();
+        nr_of_occ=occ[permutation_id].size();
+        if(nr_of_occ>0){
+            for (int i = 0; i < nr_of_occ; i++) {
+                q_start= occ[permutation_id][i];
+                q_end= q_start+q-1;
+                expected_block_index= q_start/block_length;
+
+                /* increase counter of the corresponding block, for simplicity 3 cases
+                are checked: actual block, overlap left and overlap right */
+                block_begin=blocks_range[expected_block_index][0];
+                block_end=blocks_range[expected_block_index][1];
+
+                if(q_start>=block_begin && q_end<=block_end)        // current block
+                    block_counter[expected_block_index]++;
+
+                if(expected_block_index>0){                         // block left
+                    block_begin=blocks_range[expected_block_index-1][0];
+                    block_end=blocks_range[expected_block_index-1][1];
+                    if(q_start>=block_begin && q_end<=block_end)
+                        block_counter[expected_block_index-1]++;
+                }
+                if(expected_block_index<nr_of_blocks-1){            // block right
+                    block_begin=blocks_range[expected_block_index+1][0];
+                    block_end=blocks_range[expected_block_index+1][1];
+                    if(q_start>=block_begin && q_end<=block_end)
+                        block_counter[expected_block_index+1]++;
+                }
+            }
+        }
+    }
+}
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
     time_int(0); // start timing
     string genome_file, reads_file;
     int k,q,b,threshold,w; 
+    b=0;
     bool useUkkonenTrick=true; //indicates whether the ukkonen trick will be used or not. 
     bool filterResults = true; // default value for filtering
 // format: ./exercise2 <genome.fasta> <reads.fasta> <k> <q> <b> 
@@ -515,7 +640,8 @@ int main(int argc, char**argv) {
     /* check for 1st and 2nd abort condition */
     w=reads[0].size();
     threshold = w+1-(k+1)*q; //lemma 2 (q-gramm)
-    cout<<"Computed threshold: "<<threshold<<endl;
+    cout <<"---- Values for the computation ----" << endl;
+    cout<<"Threshold: "<<threshold<<endl;
     if(b<w) //block size is smaller than the read length
         writeAndTerminate(1); // write a warning and terminate (jump to the end)
     else if(threshold<=0)
@@ -523,7 +649,7 @@ int main(int argc, char**argv) {
    
     else
     {
-        /* MAIN */
+        /* Quasar */
         int nr_of_rows=(int)pow(4,q); //expected nr of permutation of a sequence of length q
 
         // allocate int array and vector for the scan
@@ -535,26 +661,80 @@ int main(int argc, char**argv) {
         
         
         /* @TODO: counting q-grams, blocking, etc*/
+        int nr_of_blocks,min_block_length,min_overlap,seq_length, read_length;
+        
+        seq_length=genome.size();
+        read_length=reads[0].size();
+        
+        // set values for the minimal block length and for the minimal overlap length
+        if(b<(read_length+k))
+            min_block_length=read_length+k;
+        else
+            min_block_length=b;
+        min_overlap=read_length+k-1;
+        
+        /* divide the genome into blocks*/
+        nr_of_blocks=seq_length/min_block_length; // same as floor()
         
         
+        // block counting
+
+        cout<<"Minimal block length: "<<min_block_length<<endl;
+        cout<<"Nr. of blocks: "<<nr_of_blocks<<endl;
+        int *blocks_counter=new int[nr_of_blocks]; 
+        initializeIntArray(blocks_counter,nr_of_blocks,0);
+        int **blocks_range;
+        // initialize table
+        blocks_range= new int*[nr_of_blocks]; // # rows (m)
+        for (int i = 0; i < nr_of_blocks; i++)
+            blocks_range[i] = new int[2]; // # columns (n)
         
+        // calculate the limits of each block
+        calculateBocksRange(blocks_range,seq_length,nr_of_blocks,min_block_length,min_overlap);
+      
         /* main process for the computation of m reads */
-        // @TODO: to be adapted according to: "For each block where the matches 
-        // exceed the threshold (q-gram Lemma) use the semi-global aligner from Exercise 1 for verification." 
-//        vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
-//        cout <<"---- Starting computation ----" << endl;
-//        for(int readNr = 0; readNr < m; readNr++){				// run ukkonen for readNr many reads, save all scores in pos_score
-//            vector<vector<int> > tmp_pos_score;
-//            fastUkkonen(tmp_pos_score, k, genome, reads[readNr], useUkkonenTrick);
-//            filterHitsAndBacktrack(pos_score, tmp_pos_score, k, genome, reads[readNr], readNr, filterResults);
-//        }
-//
-//        /* Ending */
-//        cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
-//        writeOutput(pos_score); // export of the results
+        //Search for matching q-grams and count matches for each block
+        vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
+        cout <<"---- Starting computation ----" << endl;
+        int maximal_counter,block_start,block_end;
+        for(int readNr = 0; readNr < m; readNr++){				// run ukkonen for readNr many reads, save all scores in pos_score
+            maximal_counter=0;
+            calculateOccPerBlock(reads[readNr],occurrences,q,nr_of_blocks,min_block_length,blocks_range,blocks_counter);
+            for (int i = 0; i < nr_of_blocks; i++) {
+                if(blocks_counter[i]>maximal_counter)
+                    maximal_counter=blocks_counter[i];
+                if(blocks_counter[i]>=threshold){       // filtering
+                    cout<<"ReadNr: "<<readNr<<", block nr: "<<i<<" value: "<<blocks_counter[i]<<endl;
+                    block_start=blocks_range[i][0];
+                    block_end=blocks_range[i][1];
+                    vector<vector<int> > tmp_pos_score;
+                    fastUkkonen(tmp_pos_score, k, genome,block_start,block_end, reads[readNr], useUkkonenTrick);
+                    filterHitsAndBacktrack(pos_score, tmp_pos_score, k, genome, reads[readNr], readNr, filterResults);
+                }
+            }
+            initializeIntArray(blocks_counter,nr_of_blocks,0); // reset block counter for the next read
+            //cout<<"Maximal counter: "<<maximal_counter<<endl;
+        }
+        
+    
+
+
+
+        // free allocated space
+        for (int i = 0; i < nr_of_blocks; i++)
+            delete[] blocks_range[i];
+        delete[] blocks_range;
+        
+        delete []blocks_counter; 
+
+
+
+        /* Ending */
+        cout<<"Nr. of occurences: "<<pos_score.size()<<endl;
+        writeOutput(pos_score); // export of the results
         
         allOccurencesFound(genome,nr_of_occ,q,nr_of_rows);
-        //delete [] nr_of_occ; // may be not necessary since program terminates and the allocated space will be erased anyway 
+        delete [] nr_of_occ; // may be not necessary since program terminates and the allocated space will be erased anyway 
     }
     time_int(1); // print out elapsed time
     return 0;
