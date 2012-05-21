@@ -513,7 +513,7 @@ int main(int argc, char**argv) {
                     cout <<"Reads file:" << "\t" << argv[2] << endl;
                     break;
                 case 3:
-                    cout <<"Nr. of allowed erros:" << "\t" << argv[3] << endl;
+                    cout <<"Nr. of allowed errors:" << "\t" << argv[3] << endl;
                     break;
                 case 4:
                     cout <<"Length of the q-grams:" << "\t" << argv[4] << endl;

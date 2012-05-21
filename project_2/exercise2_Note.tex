@@ -1,0 +1,93 @@
+\documentclass[11pt, notitlepage]{scrartcl}
+\usepackage{graphicx}    % needed for including graphics e.g. EPS, PS
+\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+%\usepackage[utf8]{inputenc}
+\usepackage[latin1]{inputenc}
+\usepackage[german]{babel}
+\usepackage{subfigure}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{booktabs} % for midrule
+\usepackage{colortbl}
+\usepackage{color}
+\usepackage{hyperref}
+\definecolor{Gray}{gray}{0.6}
+
+\usepackage{tabularx}          
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}} 
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}} 
+
+\addtokomafont{captionlabel}{\bfseries} %references bf
+
+\topmargin -1.5cm        % read Lamport p.163
+\oddsidemargin -0.04cm   % read Lamport p.163
+\evensidemargin -0.04cm  % same as oddsidemargin but for left-hand pages
+\textwidth 16.59cm
+\textheight 24cm 
+\parskip 7.2pt           % sets spacing between paragraphs
+\parindent 0pt     % sets leading space for paragraphs
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+
+
+%\renewcommand{\headrulewidth}{0.5pt}
+%\fancyfoot[C]{\thepage}
+%\renewcommand{\footrulewidth}{0.5pt}
+% folder for images
+%\graphicspath{{./img/}}
+\begin{document}         
+
+
+\title{Advanced Algorithms in Bioinformatics} 
+\subtitle{Exercise 2: Read mapping with semi QUASAR}
+%\author{ }
+%\author{}
+\author{Group 5: N. G"uttler, K. Liebers, F. Mattes} % lexicogrphic sorted
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+
+% #######################################################################################
+\section{Results/Observations}
+
+
+$q=8,\quad k=0$ and block length=read length
+\begin{center}
+\begin{tabular}{c|c|c||c|c}
+\toprule
+\multirow{2}*{Reads file's name} &  \multicolumn{3}{c|}{Running time [sec]}& \multirow{2}*{Nr. of occurrences} \\
+\cline{2-4}
+&exercise1.cpp& exercise2.cpp & Razers&\\
+\hline
+{50\_100}&13.60&1.49 &11.79 &31\\
+
+\hline
+{50\_1k}& 136.47& 2.47&12.42&289\\
+ \hline
+100\_100& 13.79&1.54&11.95&16\\
+
+\hline
+100\_1k&136.68 &2.72&13.23&189\\
+ \hline
+400\_100& 15.66&1.61&12.24 &11\\
+\hline
+400\_1k& 137.23&3.63&16.19 &54\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Program 'exercise2' was executed on the same linux machine \textit{andorra}\footnote{andorra.imp.fu-berlin.de} as 'exercise1'.  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+
+%% 400_ik 0 2 400 -> 5692.45s
