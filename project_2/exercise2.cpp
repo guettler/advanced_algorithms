@@ -36,7 +36,7 @@ void convBase(char &, int &);
 string getQGramFromIndex(int,  int &);
 void allOccurrencesFound(string &, int *, int &, int &);
 void getNrOfOccAndPositions(string &, int *, vector<vector<int> > &, int &);
-void calculateBocksRange(int**, int &, int &, int &,int &);
+void calculateBlocksRange(int**, int &, int &, int &,int &);
 void calculateOccPerBlock(string &, vector<vector<int> > &, int &, int &,int &, int **, int *);
 
 /* Function definitions */
@@ -162,7 +162,7 @@ void filterHitsAndBacktrack(vector<vector<int> > &pos_score, vector<vector<int> 
     int n = m + k;			// we only calculate an m+k wide part of the dp-matrix for backtracking (worst case: k gaps in the read)
 
     // filter and backtracking
-    if(tmp_pos_score.size() > 2){									// if there are any results (exept the two dummy-results added by fastUkkonen)
+    if(tmp_pos_score.size() > 2){									// if there are any results (except the two dummy-results added by fastUkkonen)
         for(int unsigned pos=1; pos<(tmp_pos_score.size()-1); pos++){					// then for every result in tmp_pos_score
 
             // filter to get only the best results in the neighborhood of a hit.
@@ -179,8 +179,8 @@ void filterHitsAndBacktrack(vector<vector<int> > &pos_score, vector<vector<int> 
                 string B_read = read;                                                           // make a copy of the read
                 reverse(B_read.begin(), B_read.end());                                          // and reverse it
 
-                // run semiglobal alignment (normal smith waterman without ukkonen) for our new sequences (see fastUkkonen for code details)
-                int *cj = new int[m+1]; //  g++ doesnt liked 'int cj[m+1]'
+                // run semi-global alignment (normal smith waterman without Ukkonen) for our new sequences (see fastUkkonen for code details)
+                int *cj = new int[m+1]; //  g++ does not liked 'int cj[m+1]'
                 int cp, cn;
                 int min_score = k+1;
                 int min_score_pos=-1;
@@ -314,7 +314,7 @@ void fastUkkonen(vector<vector<int> > &tmp_pos_score, int &k, string &sequence,i
 /* Function to write the results according to the given format */
 void writeOutput(vector<vector<int> > &pos_score2){
     ofstream outfile("hits.result"); // creates a file to write in
-    string sep = ","; // symbor for separtion
+    string sep = ","; // symbol for separation
     string nl = "\n"; // new line
     int m=pos_score2.size(); // number of rows
     try{
@@ -360,8 +360,8 @@ void convBase(char &input, int &output){
     }
 }
 /* NOT USED
- * Given a number (permunation id) compute the corresponding string(nucleotide 
- * sequence) of length q. With this functio one could contruct the q-gram table
+ * Given a number (permutation id) compute the corresponding string(nucleotide 
+ * sequence) of length q. With this function one could construct the q-gram table
  * (works up to q=12)*/
 string getQGramFromIndex(int id,  int &q){
     string sigma="ACGT";
@@ -411,14 +411,14 @@ void getNrOfOccAndPositions(string &seq, int *output, vector<vector<int> > &occ,
             bit_array.set((q*2+1),0);
         }
         permutation_id=bit_array.to_ulong();    // convert bits in integer
-        output[permutation_id]++;               // increase nr of occurrences of the corresponding permutation
+        output[permutation_id]++;               // increase nr. of occurrences of the corresponding permutation
         occ[permutation_id].push_back(i-q+1);   // save start position in a vector
     }
 }
 
 /* Fills the table of dimension nr_of_blocks x 2 with the limits of each block
  * according to the block length and the minimal overlap */ 
-void calculateBocksRange(int **blocks_limits,int &seq_length, int &nr_of_blocks, int &block_length,int &min_overlap){
+void calculateBlocksRange(int **blocks_limits,int &seq_length, int &nr_of_blocks, int &block_length,int &min_overlap){
     int expansion_left, expansion_right;
     expansion_right = min_overlap/2;        //same as floor()
     expansion_left = min_overlap - expansion_right;
@@ -434,7 +434,7 @@ void calculateBocksRange(int **blocks_limits,int &seq_length, int &nr_of_blocks,
     blocks_limits[nr_of_blocks-1][1]= seq_length-1;
 }
 /* similar to getNrOfOccAndPositions in reading/transforming a nucleotide sequence
- into bits. After the transofmation of the read sequence it checks, whether the 
+ into bits. After the transformation of the read sequence it checks, whether the 
  given permutation has an occurrence in the genome (table occ). If yes, then with help
  * of the start position calculates the block(s) containing it and increases their counting number */
 void calculateOccPerBlock(string &read, vector<vector<int> > &occ, int &q, int &nr_of_blocks, 
@@ -458,13 +458,16 @@ void calculateOccPerBlock(string &read, vector<vector<int> > &occ, int &q, int &
             bit_array.set((q*2),0);
             bit_array.set((q*2+1),0);
         }
+
         permutation_id=bit_array.to_ulong();
         nr_of_occ=occ[permutation_id].size(); // number of occurrences of the permutation equals the size of the vector containing start positions
         if(nr_of_occ>0){
-            for (int i = 0; i < nr_of_occ; i++) {
-                q_start= occ[permutation_id][i];
+            for (int j = 0; j < nr_of_occ; j++) {
+                q_start= occ[permutation_id][j];
                 q_end= q_start+q-1;
                 expected_block_index= q_start/block_length;     // block which possibly contains the q-gram
+                if(expected_block_index==nr_of_blocks)         // depending on the length of the block, i.e. the minimal length, it could happen
+                    expected_block_index--;                             // that the last block contains almost twice elements as the others. A correction of the calculated block index is needed
 
                 /* increase counter of the corresponding block, for simplicity all 3 cases
                 are checked: actual block, overlap left and overlap right */
@@ -495,10 +498,9 @@ int main(int argc, char**argv) {
     time_int(0); // start timing
     string genome_file, reads_file;
     int k,q,b,threshold,w; 
-    b=0;
+    b=0; // initialization required by linux
     bool useUkkonenTrick=true; //indicates whether the ukkonen trick will be used or not. 
     bool filterResults = true; // default value for filtering
-// format: ./exercise2 <genome.fasta> <reads.fasta> <k> <q> <b> 
     /* Print the arguments */
     if (argc > 1) {
         cout << "Welcome..."<<endl << "---- Introduced arguments ----" << endl;
@@ -533,22 +535,7 @@ int main(int argc, char**argv) {
         q = atoi(argv[4]);// length of the q-grams
         b = atoi(argv[5]); // block size for the genome
     } 
-    /* ------ Input block for the working phase.------------------------------        
-     * -------To be erased before checking -----*/
-    else if(argc==1) // if no arguments are given by running the progam. 
-    {
-        string fileNames[]={"random10M.fasta","random10M_reads50_100.fasta","random10M_reads50_1k.fasta",
-        "random10M_reads100_100.fasta","random10M_reads100_1k.fasta",
-        "random10M_reads400_100.fasta","random10M_reads400_1k.fasta"}; // 7 given test files
 
-        genome_file=fileNames[0];
-        reads_file=fileNames[6];
-        k=0;
-        q= 0;
-        b=400;    
-    }
-    /* ------------------------------------------------------------------------*/
-   
     /* Read fasta files*/
     cout <<"---- Reading ----" << endl;
     string genome = readGenome(genome_file);
@@ -562,7 +549,7 @@ int main(int argc, char**argv) {
 
     /* check for 1st and 2nd abort condition */
     w=reads[0].size();
-    threshold = w+1-(k+1)*q; //lemma 2 (q-gramm)
+    threshold = w+1-(k+1)*q; //lemma 2 (q-gram)
     cout <<"---- Values for the computation ----" << endl;
     cout<<"Threshold: "<<threshold<<endl;
     if(b<w) //block size is smaller than the read length
@@ -577,7 +564,7 @@ int main(int argc, char**argv) {
         int *nr_of_occ=new int[nr_of_rows](); // initialized with zero
         initializeIntArray(nr_of_occ,nr_of_rows,0); // ensures that the array was initialized with 0
         vector<vector<int> > occurrences(nr_of_rows); // to save the start positions
-        cout <<"(Scanning genome...)" << endl;
+        cout <<"(Scanning genome w.r.t. q-gram permutations ...)" << endl;
         getNrOfOccAndPositions(genome,nr_of_occ,occurrences,q); // scan the given sequence and save nr of occurrences as well their positions
 
         /* Counting q-grams, division in blocks, etc */
@@ -607,8 +594,8 @@ int main(int argc, char**argv) {
             blocks_range[i] = new int[2]; // # columns (n)
         
         // calculate the limits of each block
-        calculateBocksRange(blocks_range,seq_length,nr_of_blocks,min_block_length,min_overlap);
-      
+        calculateBlocksRange(blocks_range,seq_length,nr_of_blocks,min_block_length,min_overlap);
+
         /* main process for the computation of m reads */
         //Search for matching q-grams and count matches for each block
         vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
@@ -618,7 +605,7 @@ int main(int argc, char**argv) {
             calculateOccPerBlock(reads[readNr],occurrences,q,nr_of_blocks,min_block_length,blocks_range,blocks_counter); // scan read and increase block countig if it appears in the genome. See function definition for more details
             for (int i = 0; i < nr_of_blocks; i++) {
                 if(blocks_counter[i]>=threshold){       // filtering: only the reads with block counter greater/equal threshold will be verified
-                    cout<<"ReadNr: "<<readNr<<", block nr: "<<i<<" value: "<<blocks_counter[i]<<endl;//@TODO: delete/comment for the final version
+                    //cout<<"ReadNr: "<<readNr<<", block nr: "<<i<<" value: "<<blocks_counter[i]<<endl;//@TODO: delete/comment for the final version
                     block_start=blocks_range[i][0];
                     block_end=blocks_range[i][1];
                     vector<vector<int> > tmp_pos_score;         // for the semi-global aligner procedure
@@ -628,14 +615,15 @@ int main(int argc, char**argv) {
             }
             initializeIntArray(blocks_counter,nr_of_blocks,0); // reset block counter for the next read
         }
-        allOccurrencesFound(genome,nr_of_occ,q,nr_of_rows);// check whether the expected nr. of occurrences (of q-grams!) was registred
-        // free allocated space
+        //allOccurrencesFound(genome,nr_of_occ,q,nr_of_rows);// check whether the expected nr. of occurrences (of q-grams!) was registered
+        
+        /*  free allocated space */
         // table (2 dimensional array)
         for (int i = 0; i < nr_of_blocks; i++)
             delete[] blocks_range[i];
         delete[] blocks_range;
         // arrays
-        delete []blocks_counter; 
+        delete [] blocks_counter; 
         delete [] nr_of_occ; // may be not necessary since program terminates and the allocated space will be erased anyway 
 
         /* Ending */
