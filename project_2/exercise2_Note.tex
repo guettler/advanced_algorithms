@@ -67,7 +67,7 @@ For the bit representation of numbers the associative container \textit{'bitset'
 See code for more details.   
 
 \textbf{Blocking}\\
-According to the minimal block length, which amounts at least to \textit{read length + k}, the number of blocks was calculated with $\lfloor$genome size/minimal block length$\rfloor$. The limits of each block were first determined without overlap and then expanded to the left and/or right so that the rquired minimum overlap between blocks \textit{(read length + k -1)} was achieved.
+According to the minimal block length, which amounts at least to \textit{read length + k} (otherwise it is equal to b), the number of blocks was calculated with $\lfloor$genome size/minimal block length$\rfloor$. The limits of each block were first determined without overlap and then expanded to the left and/or to the right so that the required minimum overlap between blocks \textit{(read length + k -1)} was achieved.
 
 \textbf{Matching}\\
 The reads were scanned in a similar way to the genome. For each q-gram its permutation id was computed and afterwards checked, whether this permutation occurs on the genome or not. Simply by accessing the vector table (occurrences) at position permutation id and determining the size of the vector.\\
@@ -86,7 +86,7 @@ The following table shows the new  ($3^{rd}$ column) and old runtimes.
 \begin{center}
 \begin{tabular}{c|c|c||c|c|c}
 \toprule
-\multirow{2}*{Reads file's name} &  \multicolumn{3}{c|}{Running time [sec]}& \multirow{2}*{Nr. of occurrences} & Nr. of verifications\\
+\multirow{2}*{Reads file's name} &  \multicolumn{3}{c|}{Running time [sec]}& \multirow{2}*{No. of occurrences} & No. of verifications\\
 \cline{2-4}
 &exercise1.cpp& exercise2.cpp & Razers&&(in exercise2.cpp)\\
 \hline
@@ -122,7 +122,7 @@ For the sake of completeness the last three rows contain some runtimes for the r
 \begin{center}
 \begin{tabular}{c|c|c|r|r|c|c}
 \toprule
-\textbf{Reads file's name} &\textbf{k} &\textbf{q}& \textbf{b}& \textbf{runtime [sec]} & \textbf{Nr. of verifications }& \textbf{Nr. of occurrences}\\
+\textbf{Reads file's name} &\textbf{k} &\textbf{q}& \textbf{b}& \textbf{runtime [sec]} & \textbf{No. of verifications }& \textbf{No. of occurrences}\\
 \hline
 % q
 \multirow{18}*{100\_100k}&\multirow{15}*{0} & 7 &\multirow{7}*{100} & 391.11&18748&\multirow{12}*{17481} \\
@@ -147,7 +147,8 @@ For the sake of completeness the last three rows contain some runtimes for the r
 % k
 &1&&\multirow{3}*{100}&25.07&41665&35439\\\cline{2-2}\cline{5-7}		
 &2&&&27.43&76021&54263\\\cline{2-2}\cline{5-7}
-&4&&&33.53&165777&94917\\
+&4&&&33.53&165777&94917\\\cline{2-2}\cline{5-7}
+&7&&&40.42&285131&125225\\
 \hline
 \hline
  100\_10k&7&12&200&7.69&20537&11961\\
@@ -163,7 +164,7 @@ The higher q is chosen the more elements are filtered decreasing the number of v
 
 The choose of the block's length can also turn the procedure faster since the genome is processed in greater steps. The reduction of the runtime by increasing b will reach, at some point, a minimum so that any further increase of this value do not improve the runtime anymore. Compare runtimes after doubling b=3200 (rows 10-11 and 14-15).
 
-The effects of different values of k are obvious: with k=0 the minimum runtime is reached and any other value of this parameter leads to more occurrences and required verifications, i.e., the runtime is increased (compare row 6 with 16-18).
+The effects of different values of k are obvious: with k=0 the minimum runtime is reached and any other value of this parameter leads to more occurrences and required verifications, i.e., the runtime is increased (compare row 6 with 16-19). With q=12 and read length w=100, values of k greater than 7 cause the termination of the program, since the threshold becomes negative.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
