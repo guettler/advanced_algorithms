@@ -53,6 +53,27 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementation}
+%\textbf{q-gram index}\\
+The program was implemented pretty much according to the indications given during the exercises. The bases A,C,G and T were encoded as integer numbers 0,1,2 and 3 respectively.
+
+Doing so the $4^q$ permutations of a sequence of length $q$, can be computed and accessed using their numerical representation.\\ 
+Instead of creating a suffix array for compute/store the start positions of the permutations occurrences, the genome was scanned and the number of occurrences of the found permutation was determine.
+
+When a new base at the genome is read, the bit representation of  its assigned integer number was calculated and added to the bit array of length $2q$. The integer number (encoded by q-positions) was then established and the counter of the corresponding permutation was increased. 
+No q-gram table as depicted in script was created, since the integer representation (q-gram index) was enough for all computations.\\ 
+Instead of two scans of the genome to fill a table of the size \textit{genome length - q +1}, the genome was scanned only once and the start positions of the occurrences were stored in a vector of vectors of length $4^q$.
+
+For the bit representation of numbers the associative container \textit{'bitset'} was chosen. Since its constructor requires a constant parameter at compile time, a maximal value for q, Q=12 was defined. Then depending on the given q the bit representation was appropriately adapted. 
+See code for more details.   
+
+\textbf{Blocking}\\
+According to the minimal block length, which amounts at least to read length + k, the number of blocks was calculated with: $\lfloor$ genome size/minimal block length$\rfloor$. The limits of each block were first determined without overlap and then expanded to the left and/or right so that the minimum overlap between blocks \textit{(read length + k -1)} was achieved.
+
+\textbf{Matching}\\
+The reads were scanned in a similar way to the genome. For each q-gram its permutation id was computed and afterwards checked, whether this permutation occurs on the genome or not. Simply by accessing the vector table (occurrences) at position permutation id and determining the size of the vector.\\
+On the basis of the start position the possibly block number can be calculated. Then if the q-gram start and end positions lie between the block's range, its counter was incremented. The possible occurrence in adjacent blocks (left and right) were also checked, for the case that the q-gram lies in a block-overlap.
+
+Finally, the semi-global aligner from exercise1 was used for the verification of the blocks with a counter value greater/equal the computed threshold. For this, a slightly adaptation of the function 'fastUkkonen' was effectuated in order to search in the genome only between the block's limits. 
 
 % #######################################################################################
 \section{Results/Observations}
