@@ -601,6 +601,7 @@ int main(int argc, char**argv) {
         vector<vector<int> > pos_score;					// score vector for format: (nr. of read, start position, end position, score)
         cout <<"---- Starting computation ----" << endl;
         int block_start,block_end;
+        int semiglobal_counter=0;
         for(int readNr = 0; readNr < m; readNr++){				// run ukkonen for readNr many reads, save all scores in pos_score
             calculateOccPerBlock(reads[readNr],occurrences,q,nr_of_blocks,min_block_length,blocks_range,blocks_counter); // scan read and increase block countig if it appears in the genome. See function definition for more details
             for (int i = 0; i < nr_of_blocks; i++) {
@@ -611,6 +612,7 @@ int main(int argc, char**argv) {
                     vector<vector<int> > tmp_pos_score;         // for the semi-global aligner procedure
                     fastUkkonen(tmp_pos_score, k, genome,block_start,block_end, reads[readNr], useUkkonenTrick);
                     filterHitsAndBacktrack(pos_score, tmp_pos_score, k, genome, reads[readNr], readNr, filterResults);
+                    semiglobal_counter++;
                 }
             }
             initializeIntArray(blocks_counter,nr_of_blocks,0); // reset block counter for the next read
@@ -627,9 +629,12 @@ int main(int argc, char**argv) {
         delete [] nr_of_occ; // may be not necessary since program terminates and the allocated space will be erased anyway 
 
         /* Ending */
+        cout<<"---- Results ---- "<<endl;
         cout<<"Nr. of occurrences: "<<pos_score.size()<<endl;
+        cout<<"Nr. of semi-global aligner iterations:  "<<semiglobal_counter<<endl;
         writeOutput(pos_score); // export of the results
     }// end of quasar and semi-global aligning 
     time_int(1); // print out elapsed time
+    cout<<endl;
     return 0;
 }
