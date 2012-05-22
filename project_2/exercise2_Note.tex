@@ -42,8 +42,8 @@
 \begin{document}         
 
 
-\title{Advanced Algorithms in Bioinformatics} 
-\subtitle{Exercise 2: Read mapping with semi QUASAR}
+\title{Advanced Algorithms for Bioinformatics} 
+\subtitle{Exercise 2: Read mapping with QUASAR}
 %\author{ }
 %\author{}
 \author{Group 5: N. G"uttler, K. Liebers, F. Mattes} % lexicogrphic sorted
@@ -56,34 +56,44 @@
 
 % #######################################################################################
 \section{Results/Observations}
+\subsection{Comparison with the runtime from Exercise 1}
+In order to show the impact of filtering, the program 'exercise2.cpp' was executed with the same parameters as 'exercise1' ($k=0$, Ukkonen trick = on) and the block length was set to be equal to the read length. After a few tries with different values for the q-gram length, $q=8$ was chosen since it seemed to be suitable for all data sets.
+
+The following table shows the new  ($3^{rd}$ row) and old runtimes.
 
 
-$q=8,\quad k=0$ and block length=read length
 \begin{center}
-\begin{tabular}{c|c|c||c|c}
+\begin{tabular}{c|c|c||c|c|c}
 \toprule
-\multirow{2}*{Reads file's name} &  \multicolumn{3}{c|}{Running time [sec]}& \multirow{2}*{Nr. of occurrences} \\
+\multirow{2}*{Reads file's name} &  \multicolumn{3}{c|}{Running time [sec]}& \multirow{2}*{Nr. of occurrences} & Nr. of verifications\\
 \cline{2-4}
-&exercise1.cpp& exercise2.cpp & Razers&\\
+&exercise1.cpp& exercise2.cpp & Razers&&(in exercise2.cpp)\\
 \hline
-{50\_100}&13.60&1.49 &11.79 &31\\
+{50\_100}&13.60&\textbf{1.49} &11.79 &31&31\\
 
 \hline
-{50\_1k}& 136.47& 2.47&12.42&289\\
+{50\_1k}& 136.47& \textbf{2.47}&12.42&289&289\\
  \hline
-100\_100& 13.79&1.54&11.95&16\\
+100\_100& 13.79&\textbf{1.54}&11.95&16&16\\
 
 \hline
-100\_1k&136.68 &2.72&13.23&189\\
+100\_1k&136.68 &\textbf{2.72}&13.23&189&190\\
  \hline
-400\_100& 15.66&1.61&12.24 &11\\
+400\_100& 15.66&\textbf{1.61}&12.24 &11&13\\
 \hline
-400\_1k& 137.23&3.63&16.19 &54\\
+400\_1k& 137.23&\textbf{3.63}&16.19 &54&72\\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Program 'exercise2' was executed on the same linux machine \textit{andorra}\footnote{andorra.imp.fu-berlin.de} as 'exercise1'.  
+Program 'exercise2' was executed on the same linux machine \textit{andorra}\footnote{andorra.imp.fu-berlin.de} as 'exercise1' so that the remarkably reduction of the runtime is based only on the filtering process. The number of the semi-global aligner calls, i.e., the number of verifications was in the most cases equal to the number of occurrences. 
+
+Setting $q=9$ the number of verification for the last data set is reduced from 72 to 55, reducing also the runtime to $3.47s$. For the other cases, where the number of verifications is already equal to the number of occurrences, an increase of the value of $q$ do not improve the runtime but slows down the procedure, since the number of permutations of a string of the length $q$ increase exponentially. E.g. with $q=9$ the program's runtime on the first data set amounts to $2.70s$.
+
+
+
+\subsection{Larger datasets}
+Test different values of $k$, $q$ and $b$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,3 +101,17 @@ Program 'exercise2' was executed on the same linux machine \textit{andorra}\foot
 \end{document}
 
 %% 400_ik 0 2 400 -> 5692.45s
+%random10M_reads100_100k.fasta 0 12 100 -> 23,09s 17481 b=1000 10,31	k=5 27,98
+%random10M_reads100_100k.fasta 0 10 100 -> 30,49s 17481				11.39		29,30
+%random10M_reads100_100k.fasta 0 8 100 -> 124,00s 17481				38.08	55,69
+%
+%random10_reads100_k  0 10 100 ->30.33s
+
+
+
+
+
+
+
+% windows 12 Q
+%400_1k 0 8 400 -> 21,47
