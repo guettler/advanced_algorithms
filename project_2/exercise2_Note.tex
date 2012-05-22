@@ -57,30 +57,30 @@
 The program was implemented pretty much according to the indications given during the exercises. The bases A,C,G and T were encoded as integer numbers 0,1,2 and 3 respectively.
 
 Doing so the $4^q$ permutations of a sequence of length $q$, can be computed and accessed using their numerical representation.\\ 
-Instead of creating a suffix array for compute/store the start positions of the permutations occurrences, the genome was scanned and the number of occurrences of the found permutation was determine.
+Instead of creating a suffix array for compute/store the start positions of the permutations occurrences, the genome was scanned, transforming any q-positions into a permutation id and registering its occurrence, so that the frequencies of the occurrences of all possible permutations were determined.
 
-When a new base at the genome is read, the bit representation of  its assigned integer number was calculated and added to the bit array of length $2q$. The integer number (encoded by q-positions) was then established and the counter of the corresponding permutation was increased. 
-No q-gram table as depicted in script was created, since the integer representation (q-gram index) was enough for all computations.\\ 
+When a new base at the genome is read, the bit representation of  its assigned integer number was calculated and added to a bit array. The permutation id (encoded by 2q-positions) was then established and the counter of the corresponding permutation was increased. \\
+No q-gram table as depicted in script was created, since the integer representation (q-gram index or permutation id) was enough for all the computations.\\ 
 Instead of two scans of the genome to fill a table of the size \textit{genome length - q +1}, the genome was scanned only once and the start positions of the occurrences were stored in a vector of vectors of length $4^q$.
 
 For the bit representation of numbers the associative container \textit{'bitset'} was chosen. Since its constructor requires a constant parameter at compile time, a maximal value for q, Q=12 was defined. Then depending on the given q the bit representation was appropriately adapted. 
 See code for more details.   
 
 \textbf{Blocking}\\
-According to the minimal block length, which amounts at least to read length + k, the number of blocks was calculated with: $\lfloor$ genome size/minimal block length$\rfloor$. The limits of each block were first determined without overlap and then expanded to the left and/or right so that the minimum overlap between blocks \textit{(read length + k -1)} was achieved.
+According to the minimal block length, which amounts at least to \textit{read length + k}, the number of blocks was calculated with $\lfloor$genome size/minimal block length$\rfloor$. The limits of each block were first determined without overlap and then expanded to the left and/or right so that the rquired minimum overlap between blocks \textit{(read length + k -1)} was achieved.
 
 \textbf{Matching}\\
 The reads were scanned in a similar way to the genome. For each q-gram its permutation id was computed and afterwards checked, whether this permutation occurs on the genome or not. Simply by accessing the vector table (occurrences) at position permutation id and determining the size of the vector.\\
-On the basis of the start position the possibly block number can be calculated. Then if the q-gram start and end positions lie between the block's range, its counter was incremented. The possible occurrence in adjacent blocks (left and right) were also checked, for the case that the q-gram lies in a block-overlap.
+On the basis of the start position the possibly block number can be calculated. Then, if the q-gram start and end positions were between the block's range, its counter was incremented. The possible occurrence in adjacent blocks (left and right) were also checked, for the case that the q-gram was in a block-overlap.
 
-Finally, the semi-global aligner from exercise1 was used for the verification of the blocks with a counter value greater/equal the computed threshold. For this, a slightly adaptation of the function 'fastUkkonen' was effectuated in order to search in the genome only between the block's limits. 
+Finally, the semi-global aligner from exercise1 was used for the verification of the blocks with a counter value greater/equal to the computed threshold. For this, a slightly adaptation of the function 'fastUkkonen' was effectuated in order to search in the genome only between the block's limits. 
 
 % #######################################################################################
 \section{Results/Observations}
 \subsection{Comparison with the runtime from Exercise 1}
-In order to show the impact of filtering, the program 'exercise2.cpp' was executed with the same parameters as 'exercise1' ($k=0$, Ukkonen trick = on) and the block length was set to be equal to the read length. After a few tries with different values for the q-gram length, $q=8$ was chosen since it seemed to be suitable for all data sets.
+In order to show the impact of filtering, the program 'exercise2.cpp' was executed with the same parameters as 'exercise1.cpp' ($k=0$, Ukkonen trick = on) and the block length was set to be equal to the read length. After a few tries with different values for the q-gram length, $q=8$ was chosen since it seemed to be suitable for all data sets.
 
-The following table shows the new  ($3^{rd}$ row) and old runtimes.
+The following table shows the new  ($3^{rd}$ column) and old runtimes.
 
 
 \begin{center}
@@ -114,7 +114,57 @@ Setting $q=9$ the number of verification for the last data set is reduced from 7
 
 
 \subsection{Larger datasets}
-Test different values of $k$, $q$ and $b$.
+To test the effects on the runtime by choosing different values for $k$, $q$ and $b$, the largest data set was selected. The following table summarizes the registered observations.
+
+For the sake of completeness the last three rows contain some runtimes for the remaining data sets.
+
+
+\begin{center}
+\begin{tabular}{c|c|c|r|r|c|c}
+\toprule
+\textbf{Reads file's name} &\textbf{k} &\textbf{q}& \textbf{b}& \textbf{runtime [sec]} & \textbf{Nr. of verifications }& \textbf{Nr. of occurrences}\\
+\hline
+% q
+\multirow{18}*{100\_100k}&\multirow{15}*{0} & 7 &\multirow{7}*{100} & 391.11&18748&\multirow{12}*{17481} \\
+\cline{5-6}\cline{3-3}
+ &&8&&124.74&17681&\\ \cline{5-6}\cline{3-3}
+ &&9&&50.75&17536&\\ \cline{5-6}\cline{3-3}
+ &&10&&30.33&17497&\\\cline{5-6}\cline{3-3}
+ &&11&&24.10&17485&\\\cline{5-6}\cline{3-3}
+ &&12&&23.84&\multirow{2}*{17481}&\\\cline{5-5}\cline{3-3}
+ &&13&&25.10&&\\\cline{5-6}\cline{3-3}
+% b
+\cline{3-4}
+&&\multirow{4}*{9}&200&34.93&17537&\\		\cline{4-6}
+&&&400&22.57&17553&\\\cline{4-6}
+&&&3200&15.37&17923&\\ \cline{4-6}
+&&&6400&15.49&18569&\\\cline{4-6}
+\cline{3-4}
+&&\multirow{7}*{12}&200&16.04&\multirow{2}*{17481}&\\\cline{4-5}
+&&&400&12.41&&\\\cline{4-6}
+&&&3200&9.78&\multirow{2}*{17490}&\\\cline{4-5}
+&&&6400&10.34&&\\\cline{4-6}\cline{2-2}\cline{4-4}\cline{7-7}
+% k
+&1&&\multirow{3}*{100}&25.07&41665&35439\\\cline{2-2}\cline{5-7}		
+&2&&&27.43&76021&54263\\\cline{2-2}\cline{5-7}
+&4&&&33.53&165777&94917\\
+\hline
+\hline
+ 100\_10k&7&12&200&7.69&20537&11961\\
+ \hline
+ 50\_100k&0&10&1000&8.12&26379&26334\\
+ \hline
+ 500\_10k&0&11&5000&4.15&2631&2625\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The higher q is chosen the more elements are filtered decreasing the number of verifications and thus the runtime. The larger a q-gram is the more permutations exist, so that they are less likely than permutations of short q-grams (due to the uniform distribution). This enhance the filtration and decrease the runtime to some extent: if a 'perfect' filtering has been already reached the increment of q slows down the process (compare runtimes in rows 6-7).
+
+The choose of the block's length can also turn the procedure faster since the genome is processed in greater steps. The reduction of the runtime by increasing b will reach, at some point, a minimum so that any further increase of this value do not improve the runtime anymore. Compare runtimes after doubling b=3200 (rows 10-11 and 14-15).
+
+The effects of different values of k are obvious: with k=0 the minimum runtime is reached and any other value of this parameter leads to more occurrences and required verifications, i.e., the runtime is increased (compare row 6 with 16-18).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
