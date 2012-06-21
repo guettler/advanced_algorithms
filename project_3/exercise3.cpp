@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include <bitset>
 #include <math.h>
-#include <seqan/index.h> // include path muss be 'relative'
+#include <seqan/index.h>
 using namespace std;
 /* Function prototypes (instead of header file) */
 //string readGenome(string &path);
@@ -109,33 +109,51 @@ void initializeIntArray(int *arr, int &nr_of_elements, int value) {
 	for (int i = 0; i < nr_of_elements; i++)
 		arr[i] = value;
 }
-/* NEW FUNCTIONS FOR EXERCISE 3*/
+/************************* NEW FUNCTIONS FOR EXERCISE 3***********************/
+/* Construct BWT from the suffix array (see 10.5 Lemma 4)*/
 void buildBWT(::seqan::String<unsigned> &suffixArray, string &sequence, string &bwt) {
 
         for (int i = 0; i < sequence.length(); ++i)
         {
             if(suffixArray[i]>0)
                 bwt.append(sequence,suffixArray[i]-1,1);
-//                cout<<sequence[suffixArray[i]-1]<<endl;
             else
                 bwt.append("$");
-                
         }
 }
-
-int getSizeOfAlphabet(int *alphabet_index, string &bwt){
-    int counter=0;
-    int id;
-    for(int i=0; i<bwt.length();i++){
-        id=(int)(bwt[i]);
-        alphabet_index[id]++;
-    }
-    for(int j=0;j<128;j++)
-        if(alphabet_index[j]!=0)
-            counter++;
-    return counter;
+/* move-to-front algorithm (according to script p. 11001) */
+void moveToFront(string &alphabet, string &L, int *R){
+    int sigma = alphabet.length();
+    int *M =new int [sigma];
+    for (int i = 0; i < sigma; i++)
+        M[i] = i;
     
+    int x;
+    for (int i = 0; i < L.length(); i++) {
+        x=alphabet.find(L[i]); // since alphabet is sorted, position equals rank
+        R[i]=M[x];
+        for (int j = 0; j < sigma; j++)
+            if (M[j]<M[x])
+                M[j]=M[j]+1;
+        M[x]=0;
+    }
+
+    delete [] M;
 }
+
+string getUsedSymbols(int *ascii_table, string &bwt){
+        string used_characters;
+        // scan characters in bwt and increase corresponding counter in ascii-table
+        for(int i=0; i<bwt.length();i++)
+            ascii_table[(int)bwt[i]]++;
+        // scan ascii-table for used characters to build the alphabet
+        for(int j=0;j<256;j++)
+            if(ascii_table[j]!=0)
+                used_characters.append(1,(char)j); // insert character
+
+        return used_characters;
+}
+
 /* Function to write the results according to the given format */
 /* CHANGE ME!!! */
 void writeOutput(vector<vector<int> > &pos_score2) {
@@ -200,38 +218,48 @@ int main(int argc, char**argv) {
 	if (mode == 'c') {
 		//    [x] reads a single sequence from a fasta file
 		//    [x] calculates the BWT of that sequence
-		//    [] implements move-to-front encoding and Huffman coding to compress the BWT
+		//    [] implements [x]move-to-front encoding and []Huffman coding to compress the BWT
 		//    [] writes the Huffman code into an outfile (without format)
             
 		/* Read fasta files*/
 		cout << "---- Reading ----" << endl;
 		sequence = readGenome(input_file, seq_name);
 		sequence.append("$");
-        // test 
-        string example = "mississippi";
-        example.append("$");
-      ::seqan::String<char> text = example;
+                // test 
+                string example = "mississippi";
+                example.append("$");
+                ::seqan::String<char> text = example;
 		//::seqan::String<char> text = sequence;
 		::seqan::String<unsigned> suffixArray;
 
 		::seqan::resize(suffixArray, ::seqan::length(text));
 		::seqan::createSuffixArray(suffixArray, text, ::seqan::Skew7());
-		cout << suffixArray[2] << endl;
+                /* Derive BWT from suffix array */
 //		buildBWT(suffixArray, sequence, bwt);
 		buildBWT(suffixArray, example, bwt);
-//                cout<<"suffarray: "<<endl;
-//                for(int j = 0; j<12;j++)
-//                    cout<<example[suffixArray[j]-1]<<endl;
-                cout<<"bwt: "<<bwt<<endl;
-                cout<<(int)'A'<<endl;
-                cout<<(int)'a'<<endl;
-                cout<<(int)"$"[0]<<endl;
-                cout<<(char)36<<endl;
-                cout<<(char)33<<endl;
-                int alphabet[128]={0};
-                //initializeIntArray(alphabet,128,0);
-                int sigma=getSizeOfAlphabet(alphabet,bwt);
-                cout<<"Sigma: "<<sigma<<endl;
+
+                cout<<"BWT(L): "<<bwt<<endl;
+                // Determine alphabet
+                int ascii[256]={0}; // extended ASCII table for 256 symbols
+                string alphabet=getUsedSymbols(ascii,bwt);
+                cout<<"Alphabet: "<<alphabet<<endl;
+
+                /* Move_to_front */
+                int *R = new int[bwt.length()];
+                moveToFront(alphabet, bwt, R);
+                
+                // test: example from script
+                int ascii_example[256]={0};
+                string L="aooooaaiioaeieeii";
+                int *R_example = new int[L.length()];
+                string alphabet_example=getUsedSymbols(ascii_example,L);
+                cout<<"Move_to_front \nalphabet example: "<<alphabet_example<<endl;
+                moveToFront(alphabet_example, L, R_example);
+                cout<<"R: "<<endl;
+                printIntArray(R_example,17);
+                
+                
+//                delete []R; @todo: to be uncomment at the end
                 
 	} else if (mode == 'x') {
 		/* mode x */
