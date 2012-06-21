@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include <bitset>
 #include <math.h>
-//#include <seqan/index.h> // include path was accepted, but do not (yet) compile with netbeans
+#include <seqan/index.h> // include path muss be 'relative'
 
 using namespace std;
 /* Function prototypes (instead of header file) */
@@ -177,6 +177,16 @@ int main(int argc, char**argv) {
     //    [] calculates the BWT of that sequence
     //    [] implements move-to-front encoding and Huffman coding to compress the BWT
     //    [] writes the Huffman code into an outfile 
+//        string testo = "hello world!";
+//        ::seqan::String<char> text = testo;
+        ::seqan::String<char> text = sequence;
+	::seqan::String<char> pattern = "l";
+	::seqan::String<unsigned> sa;
+
+
+	::seqan::resize(sa, ::seqan::length(text));
+	::seqan::createSuffixArray(sa, text, ::seqan::Skew7());
+        cout << sa[2]<<endl;
     }else if(mode=='x'){
         /* mode x */
     
