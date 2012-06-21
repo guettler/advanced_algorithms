@@ -62,11 +62,6 @@ void time_int(int print) {
 	t1 = t2;
 }
 
-void buildBWT(string &suffixArray, string &sequence, string &bwt) {
-
-	int sequenceLength = sequence.length();
-	cout << "Sequence length: " << sequenceLength;
-}
 
 /* Auxiliary functions to show content @TODO: remove if not used*/
 void printVector(vector<int> &v) {
@@ -114,7 +109,33 @@ void initializeIntArray(int *arr, int &nr_of_elements, int value) {
 	for (int i = 0; i < nr_of_elements; i++)
 		arr[i] = value;
 }
+/* NEW FUNCTIONS FOR EXERCISE 3*/
+void buildBWT(::seqan::String<unsigned> &suffixArray, string &sequence, string &bwt) {
 
+        for (int i = 0; i < sequence.length(); ++i)
+        {
+            if(suffixArray[i]>0)
+                bwt.append(sequence,suffixArray[i]-1,1);
+//                cout<<sequence[suffixArray[i]-1]<<endl;
+            else
+                bwt.append("$");
+                
+        }
+}
+
+int getSizeOfAlphabet(int *alphabet_index, string &bwt){
+    int counter=0;
+    int id;
+    for(int i=0; i<bwt.length();i++){
+        id=(int)(bwt[i]);
+        alphabet_index[id]++;
+    }
+    for(int j=0;j<128;j++)
+        if(alphabet_index[j]!=0)
+            counter++;
+    return counter;
+    
+}
 /* Function to write the results according to the given format */
 /* CHANGE ME!!! */
 void writeOutput(vector<vector<int> > &pos_score2) {
@@ -139,7 +160,7 @@ void writeOutput(vector<vector<int> > &pos_score2) {
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
 
-	time_int(0); // start timing
+        time_int(0); // start timing
 	string input_file, output_file, sequence, seq_name, bwt;
 	char mode;
 	//./exercise3 <input file> <output file> <mode>
@@ -177,27 +198,41 @@ int main(int argc, char**argv) {
 	}
 	/* mode c */
 	if (mode == 'c') {
+		//    [x] reads a single sequence from a fasta file
+		//    [x] calculates the BWT of that sequence
+		//    [] implements move-to-front encoding and Huffman coding to compress the BWT
+		//    [] writes the Huffman code into an outfile (without format)
+            
 		/* Read fasta files*/
 		cout << "---- Reading ----" << endl;
 		sequence = readGenome(input_file, seq_name);
 		sequence.append("$");
-
-		//    [x] reads a single sequence from a fasta file
-		//    [] calculates the BWT of that sequence
-		//    [] implements move-to-front encoding and Huffman coding to compress the BWT
-		//    [] writes the Huffman code into an outfile
-//        string testo = "hello world!";
-//        ::seqan::String<char> text = testo;
-		::seqan::String<char> text = sequence;
-		::seqan::String<char> pattern = "l";
+        // test 
+        string example = "mississippi";
+        example.append("$");
+      ::seqan::String<char> text = example;
+		//::seqan::String<char> text = sequence;
 		::seqan::String<unsigned> suffixArray;
 
 		::seqan::resize(suffixArray, ::seqan::length(text));
 		::seqan::createSuffixArray(suffixArray, text, ::seqan::Skew7());
 		cout << suffixArray[2] << endl;
-
-		buildBWT(suffixArray, sequence, bwt);
-
+//		buildBWT(suffixArray, sequence, bwt);
+		buildBWT(suffixArray, example, bwt);
+//                cout<<"suffarray: "<<endl;
+//                for(int j = 0; j<12;j++)
+//                    cout<<example[suffixArray[j]-1]<<endl;
+                cout<<"bwt: "<<bwt<<endl;
+                cout<<(int)'A'<<endl;
+                cout<<(int)'a'<<endl;
+                cout<<(int)"$"[0]<<endl;
+                cout<<(char)36<<endl;
+                cout<<(char)33<<endl;
+                int alphabet[128]={0};
+                //initializeIntArray(alphabet,128,0);
+                int sigma=getSizeOfAlphabet(alphabet,bwt);
+                cout<<"Sigma: "<<sigma<<endl;
+                
 	} else if (mode == 'x') {
 		/* mode x */
 
