@@ -174,7 +174,48 @@ void writeOutput(vector<vector<int> > &pos_score2) {
 	}
 
 }
+void writeCompressedOutputfile(string &alphabet, string &HuffmanCodes, string &seq_name){
+    ofstream outputfile("outputlie_c"); // creates a file to wite in
+    try{
+        outputfile<<"Alphabet"<<"\n"<<alphabet<<"\n"<<"HuffmanCodes\n"
+                <<0<<"@todo: code for 0"<<"\n"
+                <<1<<"code for 1"<<"\n"
+                <<2<<"code for 2"<<"\n"
+                <<3<<"code for 3"<<"\n"
+                <<seq_name<<"\n"
+                <<"@todo: Huffman code of sequence";
+        outputfile.close();
+        
+    }catch(exception e){
+        cout<<"Error during writing!"<<endl;
+        cout<<e.what()<<endl;
+    }
+    
+}
+/* Counterpart of last function: given the name of a compressed file, read and save contained information (e.g. alphabet, sequence name, etc.)*/
+void readCompressedFile(string &file_name, string &alphabet_in, string &huffman_codes, string &huffman_seq, string &seq_name_in,string &sequence_in ){
+    
+}
+/* Create a output file (FASTA format-> width=80) for a given sequence. */
+void writeUncompressedOutputfile(string &seq_name, string &sequence, int width){
+    int seq_length=sequence.length();
+    int nr_of_rows=seq_length/width;
+    int rest=seq_length % width;
+    ofstream outputfile("outputfile_x.fasta");
+    try{
+        outputfile<<seq_name<<"\n";
+        for (int i = 0; i < nr_of_rows; i++)
+            outputfile<<sequence.substr(i*width,width)<<"\n";
+        if(rest!=0)
+            outputfile<<sequence.substr(nr_of_rows*width,rest);
+        outputfile.close();
 
+    }catch(exception e){
+        cout<<"Error during writing!"<<endl;
+        cout<<e.what()<<endl;
+    }
+
+}
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
 
@@ -258,7 +299,8 @@ int main(int argc, char**argv) {
                 cout<<"R: "<<endl;
                 printIntArray(R_example,17);
                 
-                
+                //writeUncompressedOutputfile(seq_name, sequence, 80);
+                writeCompressedOutputfile(alphabet, L, seq_name);
 //                delete []R; @todo: to be uncomment at the end
                 
 	} else if (mode == 'x') {
@@ -266,6 +308,7 @@ int main(int argc, char**argv) {
 
 //    [] reads a file containing the BWT compression of some sequence
 //    [] writes the uncompressed sequence into a fasta outfile. 
+            writeUncompressedOutputfile(seq_name, sequence,80);
 	}
 	/* Ending */
 	cout << "---- Results ---- " << endl;
