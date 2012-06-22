@@ -62,7 +62,6 @@ void time_int(int print) {
 	t1 = t2;
 }
 
-
 /* Auxiliary functions to show content @TODO: remove if not used*/
 void printVector(vector<int> &v) {
 
@@ -111,47 +110,57 @@ void initializeIntArray(int *arr, int &nr_of_elements, int value) {
 }
 /************************* NEW FUNCTIONS FOR EXERCISE 3***********************/
 /* Construct BWT from the suffix array (see 10.5 Lemma 4)*/
-void buildBWT(::seqan::String<unsigned> &suffixArray, string &sequence, string &bwt) {
+void buildBWT(::seqan::String<unsigned> &suffixArray, string &sequence,
+		string &bwt) {
 
-        for (int i = 0; i < sequence.length(); ++i)
-        {
-            if(suffixArray[i]>0)
-                bwt.append(sequence,suffixArray[i]-1,1);
-            else
-                bwt.append("$");
-        }
+	for (int i = 0; i < sequence.length(); ++i) {
+		if (suffixArray[i] > 0)
+			bwt.append(sequence, suffixArray[i] - 1, 1);
+		else
+			bwt.append("$");
+	}
 }
 /* move-to-front algorithm (according to script p. 11001) */
-void moveToFront(string &alphabet, string &L, int *R){
-    int sigma = alphabet.length();
-    int *M =new int [sigma];
-    for (int i = 0; i < sigma; i++)
-        M[i] = i;
-    
-    int x;
-    for (int i = 0; i < L.length(); i++) {
-        x=alphabet.find(L[i]); // since alphabet is sorted, position equals rank
-        R[i]=M[x];
-        for (int j = 0; j < sigma; j++)
-            if (M[j]<M[x])
-                M[j]=M[j]+1;
-        M[x]=0;
-    }
+void moveToFront(string &alphabet, string &L, int *R) {
+	int sigma = alphabet.length();
+	int *M = new int[sigma];
+	for (int i = 0; i < sigma; i++)
+		M[i] = i;
 
-    delete [] M;
+	int x;
+	for (int i = 0; i < L.length(); i++) {
+		x = alphabet.find(L[i]); // since alphabet is sorted, position equals rank
+		R[i] = M[x];
+		for (int j = 0; j < sigma; j++)
+			if (M[j] < M[x])
+				M[j] = M[j] + 1;
+		M[x] = 0;
+	}
+
+	delete[] M;
 }
 
-string getUsedSymbols(int *ascii_table, string &bwt){
-        string used_characters;
-        // scan characters in bwt and increase corresponding counter in ascii-table
-        for(int i=0; i<bwt.length();i++)
-            ascii_table[(int)bwt[i]]++;
-        // scan ascii-table for used characters to build the alphabet
-        for(int j=0;j<256;j++)
-            if(ascii_table[j]!=0)
-                used_characters.append(1,(char)j); // insert character
+/**
+ * Decode function for the move-to-front encoding.
+ */
+void lToFMapping(string &alphabet, string &L, int *R) {
 
-        return used_characters;
+}
+
+string getUsedSymbols(int *ascii_table, string &bwt) {
+
+	string used_characters;
+
+	// scan characters in bwt and increase corresponding counter in ascii-table
+	for (int i = 0; i < bwt.length(); i++)
+		ascii_table[(int) bwt[i]]++;
+
+	// scan ascii-table for used characters to build the alphabet
+	for (int j = 0; j < 256; j++)
+		if (ascii_table[j] != 0)
+			used_characters.append(1, (char) j); // insert character
+
+	return used_characters;
 }
 
 /* Function to write the results according to the given format */
@@ -174,52 +183,67 @@ void writeOutput(vector<vector<int> > &pos_score2) {
 	}
 
 }
-void writeCompressedOutputfile(string &alphabet, string &HuffmanCodes, string &seq_name){
-    ofstream outputfile("outputlie_c"); // creates a file to wite in
-    try{
-        outputfile<<"Alphabet"<<"\n"<<alphabet<<"\n"<<"HuffmanCodes\n"
-                <<0<<"@todo: code for 0"<<"\n"
-                <<1<<"code for 1"<<"\n"
-                <<2<<"code for 2"<<"\n"
-                <<3<<"code for 3"<<"\n"
-                <<seq_name<<"\n"
-                <<"@todo: Huffman code of sequence";
-        outputfile.close();
-        
-    }catch(exception e){
-        cout<<"Error during writing!"<<endl;
-        cout<<e.what()<<endl;
-    }
-    
+
+/**
+ * Writing in an output file the compressed data.
+ */
+void writeCompressedOutputfile(string &alphabet, string &HuffmanCodes,
+		string &seq_name) {
+
+	// Creating a file to wite to.
+	ofstream outputfile("outputlie_c");
+
+	try {
+		outputfile << "Alphabet" << "\n" << alphabet << "\n" << "HuffmanCodes\n"
+				<< 0 << "@todo: code for 0" << "\n" << 1 << "code for 1" << "\n"
+				<< 2 << "code for 2" << "\n" << 3 << "code for 3" << "\n"
+				<< seq_name << "\n" << "@todo: Huffman code of sequence";
+
+		outputfile.close();
+	} catch (exception e) {
+		cout << "Error during writing!" << endl;
+		cout << e.what() << endl;
+	}
+
 }
-/* Counterpart of last function: given the name of a compressed file, read and save contained information (e.g. alphabet, sequence name, etc.)*/
-void readCompressedFile(string &file_name, string &alphabet_in, string &huffman_codes, string &huffman_seq, string &seq_name_in,string &sequence_in ){
-    
+
+/* Counterpart of last function: given the name of a compressed file,
+ * read and save contained information (e.g. alphabet, sequence name, etc.)
+ */
+void readCompressedFile(string &file_name, string &alphabet_in,
+		string &huffman_codes, string &huffman_seq, string &seq_name_in,
+		string &sequence_in) {
+
 }
+
 /* Create a output file (FASTA format-> width=80) for a given sequence. */
-void writeUncompressedOutputfile(string &seq_name, string &sequence, int width){
-    int seq_length=sequence.length();
-    int nr_of_rows=seq_length/width;
-    int rest=seq_length % width;
-    ofstream outputfile("outputfile_x.fasta");
-    try{
-        outputfile<<seq_name<<"\n";
-        for (int i = 0; i < nr_of_rows; i++)
-            outputfile<<sequence.substr(i*width,width)<<"\n";
-        if(rest!=0)
-            outputfile<<sequence.substr(nr_of_rows*width,rest);
-        outputfile.close();
+void writeUncompressedOutputfile(string &seq_name, string &sequence,
+		int width) {
 
-    }catch(exception e){
-        cout<<"Error during writing!"<<endl;
-        cout<<e.what()<<endl;
-    }
+	int seq_length = sequence.length();
+	int nr_of_rows = seq_length / width;
+	int rest = seq_length % width;
+	ofstream outputfile("outputfile_x.fasta");
+
+	try {
+		outputfile << seq_name << "\n";
+		for (int i = 0; i < nr_of_rows; i++)
+			outputfile << sequence.substr(i * width, width) << "\n";
+		if (rest != 0)
+			outputfile << sequence.substr(nr_of_rows * width, rest);
+		outputfile.close();
+
+	} catch (exception e) {
+		cout << "Error during writing!" << endl;
+		cout << e.what() << endl;
+	}
 
 }
+
 /* ########################## MAIN ########################## */
 int main(int argc, char**argv) {
 
-        time_int(0); // start timing
+	time_int(0); // start timing
 	string input_file, output_file, sequence, seq_name, bwt;
 	char mode;
 	//./exercise3 <input file> <output file> <mode>
@@ -261,54 +285,55 @@ int main(int argc, char**argv) {
 		//    [x] calculates the BWT of that sequence
 		//    [] implements [x]move-to-front encoding and []Huffman coding to compress the BWT
 		//    [] writes the Huffman code into an outfile (without format)
-            
+
 		/* Read fasta files*/
 		cout << "---- Reading ----" << endl;
 		sequence = readGenome(input_file, seq_name);
 		sequence.append("$");
-                // test 
-                string example = "mississippi";
-                example.append("$");
-                ::seqan::String<char> text = example;
+		// test
+		string example = "mississippi";
+		example.append("$");
+		::seqan::String<char> text = example;
 		//::seqan::String<char> text = sequence;
 		::seqan::String<unsigned> suffixArray;
 
 		::seqan::resize(suffixArray, ::seqan::length(text));
 		::seqan::createSuffixArray(suffixArray, text, ::seqan::Skew7());
-                /* Derive BWT from suffix array */
+		/* Derive BWT from suffix array */
 //		buildBWT(suffixArray, sequence, bwt);
 		buildBWT(suffixArray, example, bwt);
 
-                cout<<"BWT(L): "<<bwt<<endl;
-                // Determine alphabet
-                int ascii[256]={0}; // extended ASCII table for 256 symbols
-                string alphabet=getUsedSymbols(ascii,bwt);
-                cout<<"Alphabet: "<<alphabet<<endl;
+		cout << "BWT(L): " << bwt << endl;
+		// Determine alphabet
+		int ascii[256] = { 0 }; // extended ASCII table for 256 symbols
+		string alphabet = getUsedSymbols(ascii, bwt);
+		cout << "Alphabet: " << alphabet << endl;
 
-                /* Move_to_front */
-                int *R = new int[bwt.length()];
-                moveToFront(alphabet, bwt, R);
-                
-                // test: example from script
-                int ascii_example[256]={0};
-                string L="aooooaaiioaeieeii";
-                int *R_example = new int[L.length()];
-                string alphabet_example=getUsedSymbols(ascii_example,L);
-                cout<<"Move_to_front \nalphabet example: "<<alphabet_example<<endl;
-                moveToFront(alphabet_example, L, R_example);
-                cout<<"R: "<<endl;
-                printIntArray(R_example,17);
-                
-                //writeUncompressedOutputfile(seq_name, sequence, 80);
-                writeCompressedOutputfile(alphabet, L, seq_name);
+		/* Move_to_front */
+		int *R = new int[bwt.length()];
+		moveToFront(alphabet, bwt, R);
+
+		// test: example from script
+		int ascii_example[256] = { 0 };
+		string L = "aooooaaiioaeieeii";
+		int *R_example = new int[L.length()];
+		string alphabet_example = getUsedSymbols(ascii_example, L);
+		cout << "Move_to_front \nalphabet example: " << alphabet_example
+				<< endl;
+		moveToFront(alphabet_example, L, R_example);
+		cout << "R: " << endl;
+		printIntArray(R_example, 17);
+
+		//writeUncompressedOutputfile(seq_name, sequence, 80);
+		writeCompressedOutputfile(alphabet, L, seq_name);
 //                delete []R; @todo: to be uncomment at the end
-                
+
 	} else if (mode == 'x') {
 		/* mode x */
 
 //    [] reads a file containing the BWT compression of some sequence
 //    [] writes the uncompressed sequence into a fasta outfile. 
-            writeUncompressedOutputfile(seq_name, sequence,80);
+		writeUncompressedOutputfile(seq_name, sequence, 80);
 	}
 	/* Ending */
 	cout << "---- Results ---- " << endl;
