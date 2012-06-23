@@ -150,6 +150,14 @@ void moveToFrontDecoding(string &alphabet, int *R, int sizeOfR,
 
 }
 
+/**
+ * Function to revert the BWT transformation and get the original text.
+ */
+void lToFMapping() {
+
+
+}
+
 string getUsedSymbols(int *ascii_table, string &bwt) {
 	string used_characters;
 	// scan characters in bwt and increase corresponding counter in ascii-table
