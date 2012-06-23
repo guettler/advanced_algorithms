@@ -108,6 +108,7 @@ void initializeIntArray(int *arr, int &nr_of_elements, int value) {
 	for (int i = 0; i < nr_of_elements; i++)
 		arr[i] = value;
 }
+
 /************************* NEW FUNCTIONS FOR EXERCISE 3***********************/
 /* Construct BWT from the suffix array (see 10.5 Lemma 4)*/
 void buildBWT(::seqan::String<unsigned> &suffixArray, string &sequence,
@@ -120,14 +121,21 @@ void buildBWT(::seqan::String<unsigned> &suffixArray, string &sequence,
 			bwt.append("$");
 	}
 }
-/* move-to-front algorithm (according to script p. 11001) */
+
+/**
+ *  move-to-front algorithm (according to script p. 11001)
+ **/
 void moveToFront(string &alphabet, string &L, int *R) {
+
 	int sigma = alphabet.length();
 	int *M = new int[sigma];
-	for (int i = 0; i < sigma; i++)
+
+	for (int i = 0; i < sigma; i++) {
 		M[i] = i;
+	}
 
 	int x;
+
 	for (int i = 0; i < L.length(); i++) {
 		x = alphabet.find(L[i]); // since alphabet is sorted, position equals rank
 		R[i] = M[x];
@@ -143,7 +151,15 @@ void moveToFront(string &alphabet, string &L, int *R) {
 /**
  * Decode function for the move-to-front encoding.
  */
-void lToFMapping(string &alphabet, string &L, int *R) {
+void moveToFrontDecoding(string &alphabet, int *R, int sizeOfR, string decodedL) {
+
+	for (int r=0; r<sizeOfR; r++) {
+		decodedL.push_back(alphabet.at(R[r]));
+		string temp;
+		temp.push_back(alphabet.at(R[r]));
+		alphabet.insert(0, temp);
+		alphabet.erase(R[r]+1,1);
+	}
 
 }
 
@@ -316,11 +332,13 @@ int main(int argc, char**argv) {
 		// test: example from script
 		int ascii_example[256] = { 0 };
 		string L = "aooooaaiioaeieeii";
+		string decodedL;
 		int *R_example = new int[L.length()];
 		string alphabet_example = getUsedSymbols(ascii_example, L);
 		cout << "Move_to_front \nalphabet example: " << alphabet_example
 				<< endl;
 		moveToFront(alphabet_example, L, R_example);
+		moveToFrontDecoding(alphabet, R_example, L.length(), decodedL);
 		cout << "R: " << endl;
 		printIntArray(R_example, 17);
 
