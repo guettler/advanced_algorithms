@@ -90,14 +90,41 @@ Skew7 from seqAn and algorithm as in script. Nothing special therefore only ment
 
 % #######################################################################################
 \subsection{Mode x}
-\textbf{Huffmancode to R ?  (short description 2-3 sentences TBD by Kurt, may be unnecessary)}\\
-\textbf{Reverse MTF i.e. R to L (TBD by Nico)}\\
-\textbf{LF mapping? i.e. BWT(L) to text (TBD by Nico)}\\
+\subsubsection{Huffman Code -> R Decoding}
+short description 2-3 sentences TBD by Kurt, may be unnecessary.
+\subsubsection{L-to-F-Mapping aka BWT to Original Text Decoding}
+\subsubsection{Move-to-Front Decoding}
 
 % #######################################################################################
 \section{Results/Observations}
 \subsection*{Comparison of the compression rate}
-
+The goal of this programming assignment was to create a program able to transform a given text - e.g. a genome - into a
+datastructure with which search operations are still possible. The first step in this transformation is to create a
+suffix array and then create a BWT representation form it. After that, the task was to also compress this representation
+and store it to the hard-drive to save disk space. Compression was conducted in two steps:
+\begin{enumerate}
+    \item Using move-to-front encoding to create a sequence of integers instead of chars to save space.
+    \item Using Huffman encoding to optimize bit usage for the integer sequence from step 1.
+\end{enumerate}
+Encoding and compressed results are stored to the hard disk.\\\\
+On the other hand, the invert route was constructed, too. The program in mode `x` is able to read in the binary
+compressed file with the data. Using the data all steps (compression and encoding) are reverted and the result is
+checked for test purposes. \\\\
+In the following we present an overview of the compression of our program and wide-spread compression tools. This way
+effectiveness is checked and compared. \\\\
+\begin{center}
+\begin{tabular}{c|c|c|}
+\toprule
+\multirow{2}*{Method's name} &  \multirow{2}*{Original file size} & \multirow{2}*{Compressed file size} \\
+\hline
+{Assignment program} & 9.7 MB & 0.0 MB\\
+\hline
+{WinZIP} & 9.7 MB & 0.0 MB \\
+\hline
+{bzip2} & 9.7 MB & 2.8 MB \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
