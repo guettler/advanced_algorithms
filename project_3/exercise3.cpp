@@ -514,7 +514,7 @@ int main(int argc, char**argv) {
 		/* mode x */
 
 //    [] reads a file containing the BWT compression of some sequence
-//    [] writes the uncompressed sequence into a fasta outfile. 
+//    [x] writes the uncompressed sequence into a fasta outfile. 
 		//writeUncompressedOutputfile(seq_name, sequence, 80);
 	}
 	/* Ending */
