@@ -55,25 +55,25 @@
 \section{Implementation}
 %\textbf{q-gram index}\\
 
-
-Tasks: (nur als Anhaltspunkte, d.h. am Ende weg damit!)
-
-Mode c
-\begin{itemize}
-	\item   reads a single sequence from a fasta file
-	   \item calculates the BWT of that sequence
-    \item implements move-to-front encoding and Huffman coding to compress the BWT
-    writes the Huffman code into an outfile 
-	
-\end{itemize}
-
-Mode x
-\begin{itemize}
-	\item     reads a file containing the BWT compression of some sequence
-	\item writes the uncompressed sequence into a fasta outfile. 
-\end{itemize}
-
-\textbf{Short introduction (TBD by?)}\\
+%
+%Tasks: (nur als Anhaltspunkte, d.h. am Ende weg damit!)
+%
+%Mode c
+%\begin{itemize}
+%	\item   reads a single sequence from a fasta file
+%	   \item calculates the BWT of that sequence
+%    \item implements move-to-front encoding and Huffman coding to compress the BWT
+%    writes the Huffman code into an outfile 
+%	
+%\end{itemize}
+%
+%Mode x
+%\begin{itemize}
+%	\item     reads a file containing the BWT compression of some sequence
+%	\item writes the uncompressed sequence into a fasta outfile. 
+%\end{itemize}
+%
+%\textbf{Short introduction (TBD by?)}\\
 \subsection{Mode c}
 
 
@@ -99,15 +99,15 @@ After the insertion of the new node, the queue is sorted again.
 
 % #######################################################################################
 \subsection{Mode x}
-\subsubsection{Huffman Code -> R Decoding}
-short description 2-3 sentences TBD by Kurt, may be unnecessary.
+%\subsubsection{Huffman Code -> R Decoding}
+%short description 2-3 sentences TBD by Kurt, may be unnecessary.
 \subsubsection{L-to-F-Mapping aka BWT to Original Text Decoding}
 This is the last reversion step to create the original text. We are given the BWT representation of the original text
 from the decoding move-to-front step. So basically it's a mutated order of the original text. \\\\
-The decoding step of our program makes use of the core obersation mentioned in the lecture script - observation 9. The
+The decoding step of our program makes use of the core observation mentioned in the lecture script - observation 9. The
 observation states that the RELATIVE order of two cyclic shifts ending with the same character is preserved. In other
 words:
-THe character in 'L' from the last cyclic shift is appearing are the character in 'F' in the next shift. Following this
+The character in 'L' from the last cyclic shift is appearing are the character in 'F' in the next shift. Following this
 fact, we can say that a sequence of the same character in the given 'L' is the same sequence of this character in 'F',
 only starting at different points. Using those observations what we are really doing is: 
 \begin{itemize}
@@ -119,7 +119,7 @@ only starting at different points. Using those observations what we are really d
     character of the alphabet up to that position.
     \item Having both lists, the 'LF' function can be calculated like this: LF(i) = C(L[i]) + Occ(L[i],i)
 \end{itemize}
-The method for this decoding step is called 'lfMapping' in our code. Unfornuately we weren't able to complete the
+The method for this decoding step is called 'lfMapping' in our code. Unforntunately we weren't able to complete the
 implementation of this method. This is what's missing for us to complete the 'x' mode and decode everything. The
 implementation - so far - is given in the code.
 \subsubsection{Move-to-Front Decoding}
@@ -128,7 +128,7 @@ text, given the encoded sequence of integers. Also given from the stored file is
 original text consisted of. \\\\
 In principle the reversion is the same core procedure as the encoding step. We are using the sequence of integers -
 denoted as 'R' in the lecture script - which contains the spots of the alphabet to be taken. Having one spot of the
-alphbet we pick that one and move the char to the sequence of chars to be created. This new sequence is our developing
+alphabet we pick that one and move the char to the sequence of chars to be created. This new sequence is our developing
 decoded 'L' or the BWT sequence. Afterwards we move the selected char to the front of the alphabet sequence - like in
 the encoding step - and move one position to the right in our given integer stream. Done. \\\\
 In our code this decoding method is called 'moveToFrontDecoding'.
@@ -136,7 +136,7 @@ In our code this decoding method is called 'moveToFrontDecoding'.
 \section{Results/Observations}
 \subsection*{Comparison of the compression rate}
 The goal of this programming assignment was to create a program able to transform a given text - e.g. a genome - into a
-datastructure with which search operations are still possible. The first step in this transformation is to create a
+data structure with which search operations are still possible. The first step in this transformation is to create a
 suffix array and then create a BWT representation form it. After that, the task was to also compress this representation
 and store it to the hard-drive to save disk space. Compression was conducted in two steps:
 \begin{enumerate}
@@ -153,10 +153,11 @@ effectiveness is checked and compared. \\\\
 \begin{tabular}{c|c|c|}
 \toprule
 \multirow{2}*{Method's name} &  \multirow{2}*{Original file size} & \multirow{2}*{Compressed file size} \\
+&&\\
 \hline
-{Assignment program} & 9.7 MB & 0.0 MB\\
+{Assignment program} & 9.7 MB & 3.05 MB\\
 \hline
-{WinZIP} & 9.7 MB & 0.0 MB \\
+{WinRar} & 9.7 MB & 2.96 MB \\
 \hline
 {bzip2} & 9.7 MB & 2.8 MB \\
 \bottomrule

@@ -444,7 +444,7 @@ int main(int argc, char**argv) {
             buildBWT(suffixArray, sequence, bwt);
             
 
-//            //####################################### test @todo: delete!
+//            //####################################### test!
 //            string example = "mississippi";
 //            example.append("$");
 //            ::seqan::String<char> text = example;
@@ -467,6 +467,7 @@ int main(int argc, char**argv) {
             cout<<"Frequencies: ";
             printVector(frequencies);
 
+            cout << "---- MTF and Huffman coding ----" << endl;
             /* Move_to_front */
             int *R = new int[bwt.length()];
             moveToFront(alphabet, bwt, R);
@@ -490,7 +491,6 @@ int main(int argc, char**argv) {
 //            // ###############################################################
             
             /* Huffman coding */
-            //@ TODO: uncomment
             node *nodes_array = new node [2*alphabet.length()-1];  //binary trees have 2N-1 nodes by N leafs
             getHuffmanTree(alphabet,frequencies,nodes_array);
             string *bit_codes = new string[alphabet.length()];
@@ -498,7 +498,12 @@ int main(int argc, char**argv) {
             string HuffmanCode; // to store the bit code derive from R
             deriveHuffmanCodeFromR(bit_codes,R,bwt.length(),HuffmanCode);
             
+            // write output file
             writeCompressedOutputfile(alphabet, bit_codes, HuffmanCode,seq_name);
+            /* free reserved place */
+            delete []R;
+            delete []nodes_array;
+            delete []bit_codes;
             // test
 //            node *nodes_example = new node [2*alphabet_example.length()-1];  //binary trees have 2N-1 nodes by N leafs
 //            getHuffmanTree(alphabet_example,frequencies_example,nodes_example);
@@ -523,9 +528,6 @@ int main(int argc, char**argv) {
 //            deriveRFromHuffmanCode(probe,HuffmanCode_example,max_bit_length,R_probe);
 //            cout<<"R probe size: "<<R_probe.size()<<endl;
 //            printVector(R_probe);
-//            delete []R; @todo: to be uncomment at the end
-//            delete []nodes_array;
-//            delete []huff_codes;
 //            string path="outputlie_c";
 //            string a,seq,hffy;
 //            map<string,int> t;
@@ -570,10 +572,7 @@ int main(int argc, char**argv) {
 //    [x] writes the uncompressed sequence into a fasta outfile. 
 		//writeUncompressedOutputfile(seq_name, sequence, 80);
 	}
-	/* Ending */
-//	cout << "---- Results ---- " << endl;
-//	cout << "Name of the sequence: " << seq_name << endl;
-//	cout << "Sequence: " << sequence.substr(0, 10) << endl;
+
 
 	time_int(1); // print out elapsed time
 	cout << endl;
