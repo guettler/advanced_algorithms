@@ -153,7 +153,7 @@ void moveToFront(string &alphabet, string &L, int *R) {
  * Decode function for the move-to-front encoding.
  */
 void moveToFrontDecoding(string &alphabet, int *R, int sizeOfR,
-		string decodedL) {
+		string &decodedL) {
 
 	for (int r = 0; r < sizeOfR; r++) {
 		decodedL.push_back(alphabet.at(R[r]));
@@ -512,6 +512,32 @@ int main(int argc, char**argv) {
 
     } else if (mode == 'x') {
 		/* mode x */
+    	//////////////////////////////////////////////////////////////////////////
+    	///// move-to-front decoding Tests ///////////////////////////////////////
+    	//////////////////////////////////////////////////////////////////////////
+
+        int ascii_example[256] = { 0 };
+        string L = "aooooaaiioaeieeii";
+        string decodedL;
+        int *R_example = new int[L.length()];
+        string alphabet_example;
+        vector<int> frequencies_example;
+        getUsedSymbolsAndFrequencies(ascii_example, L,alphabet_example,frequencies_example);
+        moveToFront(alphabet_example, L, R_example);
+    	moveToFrontDecoding(alphabet_example, R_example, L.length(), decodedL);
+    	string successful;
+
+    	if (L == decodedL) {
+    		successful = "Yes";
+    	} else {
+    		successful = "No";
+    	}
+
+        cout << "Test move-to-front decoding successful: " << successful << endl;
+
+    	///////////////////////////////////////////////////////////////////////////
+    	////// End of move-to-front Test //////////////////////////////////////////
+    	///////////////////////////////////////////////////////////////////////////
 
 //    [] reads a file containing the BWT compression of some sequence
 //    [x] writes the uncompressed sequence into a fasta outfile. 
