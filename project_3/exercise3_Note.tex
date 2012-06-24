@@ -80,13 +80,22 @@ Mode x
 
 
   
-\textbf{BWT and move-to-front (short: 2-3 sentences TBD by Kurt)}\\
-Skew7 from seqAn and algorithm as in script. Nothing special therefore only mention it and warn, that on linux we could not import seqan, therefore it could be problems by compiling.
+\textbf{BWT and move-to-front}\\
+With the library \textit{seqan} the suffix array of the given sequence was obtain. For this the function \textit{createSuffixArray() }with option \textit{Skew7} was used. The BWT derivation from the suffix array as well as the move-to-front algorithm were implemented according to the lecture's script.
+
+\emph{Remark:} on linux we could not import \textit{seqan} properly(\#include <seqan/index.h>), without using some IDE. Therefore warning messages or even problems by compiling are unfortunately possible.
 
 
-\textbf{Huffman code: TBD by Kurt}\\
--Description of the used data structures and how to get the pathway(bitcode) of the characters i.e. leafs.\\
--outputfile?: 1-2 sentences
+\textbf{Huffman code}\\
+By scanning the BWT the used characters (i.e. the alphabet) and their frequencies were determined. On the basis of these data the Huffman code of the R array was calculated.\\
+The conceptual Huffman tree were build using a defined data structure '\textit{node}' and the STL container list, as priority queue.
+
+With the information that for $N$ leafs, a binary tree has $2N-1$ nodes, the Huffman tree can be stored in an array of '\textit{nodes}'. The first $N$ entries contains the character carrying leafs; the remaining entries were filled during the Huffman algorithm. The last entry of the array correspond to the tree's root.
+
+\textit{Struct} \textit{node} contains all information needed to establish the relationship between the nodes of the array. E.g. frequency, pointer to the children (left, right), parent and own id w.r.t. the index of the node's array and so on. Once the algorithm is done (i.e. only one node remains in the queue) all entries of the array has been processed. Then, the sequence of bit codes of each character can be obtained inverting the path computed from the leafs to the root. (For more details see code).
+
+The container list was selected, because it allows to sort the elements according to some argument, in this case the according to the frequency value saved in each node. Accessing to the front of the list, the nodes with the 2 smallest frequencies could be obtain easily. \\
+After the insertion of the new node, the queue was sorted again.
 
 % #######################################################################################
 \subsection{Mode x}
