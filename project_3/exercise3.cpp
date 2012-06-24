@@ -168,7 +168,7 @@ void moveToFrontDecoding(string &alphabet, int *R, int sizeOfR,
 /**
  * Function to revert the BWT transformation and get the original text.
  */
-void lToFMapping() {
+void lfMapping() {
 
 
 }
