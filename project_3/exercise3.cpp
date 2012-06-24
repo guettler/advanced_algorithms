@@ -274,6 +274,42 @@ void deriveHuffmanCodeFromR(string bit_codes[], int *R, int nr_of_elements, stri
     }
 }
 
+/* Backwards: given Huffman codes and huffmanCode derive R */
+/* given char index -> bitcode, invert it to bitcode -> char index */
+void createMapOfBitcodes(string bit_codes[], string &alphabet, map<string,int> &char_index_of_bitcode, int &max_bit_length){
+    int unsigned max_length=0;
+    for (int unsigned i = 0; i < alphabet.length(); i++){ 
+         char_index_of_bitcode[bit_codes[i]]= i;
+         if(bit_codes[i].length()>max_length)
+             max_length=bit_codes[i].length();
+    }
+    max_bit_length=max_length;
+}
+
+//void getNrOfCharactersEncodes(string bit_codes[], string &alphabet, string &Huffman_code, map<string,int> bitcode_of_char_index){
+void deriveRFromHuffmanCode(map<string,int> &char_index_of_bitcode,string &Huffman_code,int max_bit_length, vector<int> &R){
+    int unsigned start=0;
+    string tmp;
+    while (start<Huffman_code.length()) {
+        for (int i = 1; i <= max_bit_length;  i++) {// not optimal upper bound...
+            tmp=Huffman_code.substr(start,i);
+            if (char_index_of_bitcode.count(tmp)>0) {// map contains element for given key
+                R.push_back(char_index_of_bitcode[tmp]); // add int to R
+                start+=tmp.length();
+                i=0;
+            }
+        }
+    }
+//    int unsigned min_len, max_len; // minimal and maximal length of bit codes
+//    min_len=bit_codes[0].length();
+//    max_len=bit_codes[0].length();
+//    for (int unsigned i = 1; i < alphabet.length(); i++) {
+//        if(bit_codes[i].length()<min_len)
+//            min_len=bit_codes[i].length();
+//        if(bit_codes[i].length()>max_len)
+//            max_len=bit_codes[i].length();
+//    }
+}
 /*  ####################### Functions to write/read files #####################################################*/
 /* Writing in an output file the compressed data. */
 void writeCompressedOutputfile(string &alphabet, string bit_codes[], string &HuffmanCode,string &seq_name) {
@@ -459,6 +495,16 @@ int main(int argc, char**argv) {
             
             //writeUncompressedOutputfile(seq_name, sequence, 80);
             writeCompressedOutputfile(alphabet_example, bit_codes, HuffmanCode_example,seq_name);
+            
+            map<string,int> probe;
+            vector<int> R_probe;
+            int max_bit_length;
+            createMapOfBitcodes(bit_codes,alphabet_example,probe,max_bit_length);
+            
+            cout<<"map size: "<<probe.size()<<endl;
+            deriveRFromHuffmanCode(probe,HuffmanCode_example,max_bit_length,R_probe);
+            cout<<"R probe size: "<<R_probe.size()<<endl;
+            printVector(R_probe);
 //            delete []R; @todo: to be uncomment at the end
 //            delete []nodes_array;
 //            delete []huff_codes;
@@ -494,7 +540,7 @@ int main(int argc, char**argv) {
     	///////////////////////////////////////////////////////////////////////////
 
 //    [] reads a file containing the BWT compression of some sequence
-//    [] writes the uncompressed sequence into a fasta outfile. 
+//    [x] writes the uncompressed sequence into a fasta outfile. 
 		//writeUncompressedOutputfile(seq_name, sequence, 80);
 	}
 	/* Ending */
