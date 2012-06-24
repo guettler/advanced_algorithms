@@ -167,11 +167,11 @@ void moveToFrontDecoding(string &alphabet, int *R, int sizeOfR,
  */
 void lfMapping(string &alphabet, string &decodedL) {
 
-	vector<vector<char,int>> c;
-
-	for (int unsigned i = 0; i < decodedL.length(); i++) {
-		c<decodedL[i]> = vector<vector() >;
-	}
+//	vector<vector<char,int>> c;
+//
+//	for (int unsigned i = 0; i < decodedL.length(); i++) {
+//		c<decodedL[i]> = vector<vector() >;
+//	}
 }
 
 void getUsedSymbolsAndFrequencies(int *ascii_table, string &bwt, string &alphabet, vector<int> &frequencies) {
