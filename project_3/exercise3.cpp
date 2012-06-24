@@ -138,7 +138,7 @@ void moveToFront(string &alphabet, string &L, int *R) {
         M[i] = i;
 
     int x;
-    for (int i = 0; i < L.length(); i++) {
+    for (int unsigned i = 0; i < L.length(); i++) {
         x = alphabet.find(L[i]); // since alphabet is sorted, position equals rank
         R[i] = M[x];
         for (int j = 0; j < sigma; j++)
@@ -176,7 +176,7 @@ void lToFMapping() {
 void getUsedSymbolsAndFrequencies(int *ascii_table, string &bwt, string &alphabet, vector<int> &frequencies) {
     string used_characters;
     // scan characters in bwt and increase corresponding counter in ascii-table
-    for (int i = 0; i < bwt.length(); i++)
+    for (int unsigned i = 0; i < bwt.length(); i++)
             ascii_table[(int) bwt[i]]++;
     // scan ascii-table for used characters to build the alphabet
     for (int j = 0; j < 256; j++)
@@ -249,13 +249,13 @@ void getBitCodesHuffmanTree(string &alphabet, node *nodes_array, string bit_code
     int tmp_parent_id;
     string tmp;
     char tmp_path;
-    for (int i = 0; i < alphabet.length(); i++) {
+    for (int unsigned i = 0; i < alphabet.length(); i++) {
         if(alphabet[i]!=nodes_array[i].character)
             cout<<"WARNING: characters of the alphabet and the ones stored in tree are not the same!"<<endl;
         tmp_path=nodes_array[i].path;
         tmp_parent_id=nodes_array[i].parent_id;
         tmp.append(1,tmp_path);
-        if(tmp_parent_id!=2*alphabet.length()-2)// last element is the root
+        if((unsigned)tmp_parent_id!=2*alphabet.length()-2)// last element is the root
             while (tmp_parent_id!=-1) { // -1 denotes the root of the tree
                 tmp_path=nodes_array[tmp_parent_id].path;
                 if(tmp_path!='R') //if node is root, do not attach path
@@ -281,12 +281,12 @@ void writeCompressedOutputfile(string &alphabet, string bit_codes[], string &Huf
     string separator=" ";
     try {
         outputfile << "Alphabet" << "\n" << alphabet << "\n" << "HuffmanCodes\n";
-        for (int i = 0; i < alphabet.length(); i++)
+        for (int unsigned i = 0; i < alphabet.length(); i++)
             outputfile<< i<< separator<< bit_codes[i]<<"\n";
 
         outputfile<< seq_name << "\n";
         // huffman code
-        int width=80;
+        int unsigned width=80;
         if(HuffmanCode.length()>width){
             int nr_of_rows=HuffmanCode.length()/width;
             int rest=HuffmanCode.length()%width;
@@ -449,7 +449,7 @@ int main(int argc, char**argv) {
             getHuffmanTree(alphabet_example,frequencies_example,nodes_example);
             string *bit_codes = new string[alphabet_example.length()];
             getBitCodesHuffmanTree(alphabet_example,nodes_example, bit_codes);
-                 for (int i = 0; i < alphabet_example.length(); i++) 
+                 for (int unsigned i = 0; i < alphabet_example.length(); i++) 
                         cout<<"path for i: "<<i<<" "<<bit_codes[i]<<endl;
 
             string HuffmanCode_example;
