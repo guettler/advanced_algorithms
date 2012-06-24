@@ -165,9 +165,13 @@ void moveToFrontDecoding(string &alphabet, int *R, int sizeOfR,
 /**
  * Function to revert the BWT transformation and get the original text.
  */
-void lfMapping() {
+void lfMapping(string &alphabet, string &decodedL) {
 
+	vector<vector<char,int>> c;
 
+	for (int unsigned i = 0; i < decodedL.length(); i++) {
+		c<decodedL[i]> = vector<vector() >;
+	}
 }
 
 void getUsedSymbolsAndFrequencies(int *ascii_table, string &bwt, string &alphabet, vector<int> &frequencies) {
@@ -535,29 +539,28 @@ int main(int argc, char**argv) {
 //     cout<<"map content "<<t["11"]<<endl;
 
     } else if (mode == 'x') {
-		/* mode x */
     	//////////////////////////////////////////////////////////////////////////
     	///// move-to-front decoding Tests ///////////////////////////////////////
     	//////////////////////////////////////////////////////////////////////////
 
-        int ascii_example[256] = { 0 };
-        string L = "aooooaaiioaeieeii";
-        string decodedL;
-        int *R_example = new int[L.length()];
-        string alphabet_example;
-        vector<int> frequencies_example;
-        getUsedSymbolsAndFrequencies(ascii_example, L,alphabet_example,frequencies_example);
-        moveToFront(alphabet_example, L, R_example);
-    	moveToFrontDecoding(alphabet_example, R_example, L.length(), decodedL);
-    	string successful;
-
-    	if (L == decodedL) {
-    		successful = "Yes";
-    	} else {
-    		successful = "No";
-    	}
-
-        cout << "Test move-to-front decoding successful: " << successful << endl;
+//        int ascii_example[256] = { 0 };
+//        string L = "aooooaaiioaeieeii";
+//        string decodedL;
+//        int *R_example = new int[L.length()];
+//        string alphabet_example;
+//        vector<int> frequencies_example;
+//        getUsedSymbolsAndFrequencies(ascii_example, L,alphabet_example,frequencies_example);
+//        moveToFront(alphabet_example, L, R_example);
+//    	moveToFrontDecoding(alphabet_example, R_example, L.length(), decodedL);
+//    	string successful;
+//
+//    	if (L == decodedL) {
+//    		successful = "Yes";
+//    	} else {
+//    		successful = "No";
+//    	}
+//
+//        cout << "Test move-to-front decoding successful: " << successful << endl;
 
     	///////////////////////////////////////////////////////////////////////////
     	////// End of move-to-front Test //////////////////////////////////////////
