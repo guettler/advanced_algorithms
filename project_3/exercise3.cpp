@@ -133,18 +133,27 @@ void lToFMapping(string &alphabet, string &L, int *R) {
 
 }
 
-string getUsedSymbols(int *ascii_table, string &bwt) {
+void getUsedSymbolsAndFrequencies(int *ascii_table, string &bwt, string &alphabet, vector<int> &frequencies) {
     string used_characters;
     // scan characters in bwt and increase corresponding counter in ascii-table
     for (int i = 0; i < bwt.length(); i++)
             ascii_table[(int) bwt[i]]++;
     // scan ascii-table for used characters to build the alphabet
     for (int j = 0; j < 256; j++)
-            if (ascii_table[j] != 0)
+            if (ascii_table[j] != 0){
                     used_characters.append(1, (char) j); // insert character
-    return used_characters;
+                    frequencies.push_back(ascii_table[j]);
+            }
+    alphabet= used_characters;
 }
-
+//void getFrequencies(int *ascii_table, string &alphabet, int *frequencies){
+//    for (int i = 0; i < alphabet.length(); i++) {
+//        frequencies[i]=ascii_table[(int)alphabet[i]];
+//
+//    }
+//
+//}
+/* Functions to write/read files */
 /* Writing in an output file the compressed data. */
 void writeCompressedOutputfile(string &alphabet, string &HuffmanCodes, string &seq_name) {
     ofstream outputfile("outputlie_c");// Creating a file to wite to.
@@ -258,8 +267,13 @@ int main(int argc, char**argv) {
             cout << "BWT(L): " << bwt << endl;
             // Determine alphabet
             int ascii[256] = { 0 }; // extended ASCII table for 256 symbols
-            string alphabet = getUsedSymbols(ascii, bwt);
+            string alphabet;
+            vector<int>frequencies;
+            getUsedSymbolsAndFrequencies(ascii, bwt, alphabet,frequencies);
+
             cout << "Alphabet: " << alphabet << endl;
+            printVector(frequencies);
+            //printIntArray(freqs,alphabet.length());
 
             /* Move_to_front */
             int *R = new int[bwt.length()];
@@ -269,15 +283,21 @@ int main(int argc, char**argv) {
             int ascii_example[256] = { 0 };
             string L = "aooooaaiioaeieeii";
             int *R_example = new int[L.length()];
-            string alphabet_example = getUsedSymbols(ascii_example, L);
+            string alphabet_example;
+            vector<int> frequencies_example;
+
+            getUsedSymbolsAndFrequencies(ascii_example, L,alphabet_example,frequencies_example);
+
             cout << "Move_to_front \nalphabet example: " << alphabet_example
                             << endl;
+            printVector(frequencies_example);
+//            printIntArray(freqs_Ex,alphabet_example.length());
             moveToFront(alphabet_example, L, R_example);
             cout << "R: " << endl;
             printIntArray(R_example, 17);
-
+            cout<<"$ "<<(int)alphabet[0]<<endl;
             //writeUncompressedOutputfile(seq_name, sequence, 80);
-            writeCompressedOutputfile(alphabet, L, seq_name);
+            //writeCompressedOutputfile(alphabet, L, seq_name);
     //                delete []R; @todo: to be uncomment at the end
 
     } else if (mode == 'x') {
