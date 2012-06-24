@@ -13,6 +13,7 @@
 #include <math.h>
 #include <seqan/index.h>
 #include <list>
+#include <map>
 using namespace std;
 
 struct node{
@@ -32,9 +33,6 @@ bool nodeComparator(const node& lhs, const node& rhs){
 }
 
 
-/* Function prototypes (instead of header file) */
-//string readGenome(string &path);
-//void writeOutput(vector<vector<int> > &pos_score2);
 /* Function definitions */
 string readGenome(string &path, string &seq_name) {
     ifstream file;
@@ -162,7 +160,6 @@ void moveToFrontDecoding(string &alphabet, int *R, int sizeOfR,
 		alphabet.insert(0, temp);
 		alphabet.erase(R[r] + 1, 1);
 	}
-
 }
 
 /**
@@ -186,8 +183,6 @@ void getUsedSymbolsAndFrequencies(int *ascii_table, string &bwt, string &alphabe
             }
     alphabet= used_characters;
 }
-
-
 
 /* Huffman coding */
 void getHuffmanTree(string &alphabet, vector<int> &frequencies, node *nodes){
@@ -286,7 +281,6 @@ void createMapOfBitcodes(string bit_codes[], string &alphabet, map<string,int> &
     max_bit_length=max_length;
 }
 
-//void getNrOfCharactersEncodes(string bit_codes[], string &alphabet, string &Huffman_code, map<string,int> bitcode_of_char_index){
 void deriveRFromHuffmanCode(map<string,int> &char_index_of_bitcode,string &Huffman_code,int max_bit_length, vector<int> &R){
     int unsigned start=0;
     string tmp;
@@ -300,20 +294,11 @@ void deriveRFromHuffmanCode(map<string,int> &char_index_of_bitcode,string &Huffm
             }
         }
     }
-//    int unsigned min_len, max_len; // minimal and maximal length of bit codes
-//    min_len=bit_codes[0].length();
-//    max_len=bit_codes[0].length();
-//    for (int unsigned i = 1; i < alphabet.length(); i++) {
-//        if(bit_codes[i].length()<min_len)
-//            min_len=bit_codes[i].length();
-//        if(bit_codes[i].length()>max_len)
-//            max_len=bit_codes[i].length();
-//    }
 }
 /*  ####################### Functions to write/read files #####################################################*/
 /* Writing in an output file the compressed data. */
 void writeCompressedOutputfile(string &alphabet, string bit_codes[], string &HuffmanCode,string &seq_name) {
-    ofstream outputfile("outputlie_c"); // Creating a file to wite to.
+    ofstream outputfile("outputfile_c"); // Creating a file to wite to.
     string separator=" ";
     try {
         outputfile << "Alphabet" << "\n" << alphabet << "\n" << "HuffmanCodes\n";
@@ -343,10 +328,41 @@ void writeCompressedOutputfile(string &alphabet, string bit_codes[], string &Huf
 /* Counterpart of last function: given the name of a compressed file,
  * read and save contained information (e.g. alphabet, sequence name, etc.)
  */
-void readCompressedFile(string &file_name, string &alphabet_in,
-		string &huffman_codes, string &huffman_seq, string &seq_name_in,
-		string &sequence_in) {
+void readCompressedFile(string &path, string &alphabet_in,string &seq_name_in,
+		map<string,int> &char_index_of_bitcode,string &huffmanCode) {
+    ifstream file;
+    string line;
+    string tmp[3];
+    
+    try{
+        file.open(path.c_str(), ifstream::in);
+        if(!file)
+            cout<< "File could not be opened. Please check path and file's name..."<< endl;
+    
+        for (int i = 0; i < 3; i++) {
+        getline(file, line);
+        tmp[i]=line;
+        }
+        alphabet_in=tmp[1];
+        int nr_of_chars=tmp[1].length();
+        for (int i = 0; i < nr_of_chars; i++) {
+            getline(file, line);
+            char_index_of_bitcode[line.substr(2)]=i;
+        }
 
+        while(!file.eof())
+        {
+            getline(file, line);
+            if(line.at(0)== '>')
+                seq_name_in=line;
+            else // if not id line
+                huffmanCode.append(line);
+        }
+    }
+    catch(exception e){
+        cout << e.what() << endl;
+    }
+    file.close();
 }
 
 /* Create a output file (FASTA format-> width=80) for a given sequence. */
@@ -410,36 +426,32 @@ int main(int argc, char**argv) {
 	}
 	/* mode c */
 	if (mode == 'c') {
-            //    [x] reads a single sequence from a fasta file
-            //    [x] calculates the BWT of that sequence
-            //    [] implements [x]move-to-front encoding and []Huffman coding to compress the BWT
-            //    [] writes the Huffman code into an outfile (without format)
 
             /* Read fasta files*/
-            cout << "---- Reading ----" << endl;
+            cout << "---- Computing SA ----" << endl;
             sequence = readGenome(input_file, seq_name);
             sequence.append("$");
-            // to uncomment for the final version
-//            ::seqan::String<char> text = sequence;
-//            ::seqan::String<unsigned> suffixArray;
-//            ::seqan::resize(suffixArray, ::seqan::length(text));
-//            ::seqan::createSuffixArray(suffixArray, text, ::seqan::Skew7());
-            /* Derive BWT from suffix array */
-//            buildBWT(suffixArray, sequence, bwt);
             
-
-            //####################################### test @todo: delete!
-            string example = "mississippi";
-            example.append("$");
-            ::seqan::String<char> text = example;
+            ::seqan::String<char> text = sequence;
             ::seqan::String<unsigned> suffixArray;
-
             ::seqan::resize(suffixArray, ::seqan::length(text));
             ::seqan::createSuffixArray(suffixArray, text, ::seqan::Skew7());
             /* Derive BWT from suffix array */
-            buildBWT(suffixArray, example, bwt);
-//          ################################### end of sector to delete
-            cout << "BWT(L): " << bwt << endl;
+            buildBWT(suffixArray, sequence, bwt);
+            
+
+//            //####################################### test @todo: delete!
+//            string example = "mississippi";
+//            example.append("$");
+//            ::seqan::String<char> text = example;
+//            ::seqan::String<unsigned> suffixArray;
+//
+//            ::seqan::resize(suffixArray, ::seqan::length(text));
+//            ::seqan::createSuffixArray(suffixArray, text, ::seqan::Skew7());
+//            /* Derive BWT from suffix array */
+//            buildBWT(suffixArray, example, bwt);
+////          ################################### end of sector to delete
+  //          cout << "BWT(L): " << bwt << endl;
             
             // Determine alphabet
             int ascii[256] = { 0 }; // extended ASCII table for 256 symbols
@@ -448,6 +460,7 @@ int main(int argc, char**argv) {
             getUsedSymbolsAndFrequencies(ascii, bwt, alphabet,frequencies);
 
             cout << "Alphabet: " << alphabet << endl;
+            cout<<"Frequencies: ";
             printVector(frequencies);
 
             /* Move_to_front */
@@ -455,60 +468,71 @@ int main(int argc, char**argv) {
             moveToFront(alphabet, bwt, R);
             
             
-            // ########################test: example from script @ todo: DELETE
-            int ascii_example[256] = { 0 };
-            string L = "aooooaaiioaeieeii";
-            int *R_example = new int[L.length()];
-            string alphabet_example;
-            vector<int> frequencies_example;
-
-            getUsedSymbolsAndFrequencies(ascii_example, L,alphabet_example,frequencies_example);
-
-            cout << "Move_to_front \nalphabet example: " << alphabet_example
-                            << endl;
-            printVector(frequencies_example);
-            moveToFront(alphabet_example, L, R_example);
-            cout << "R: " << endl;
-            printIntArray(R_example, 17);
-            // ###############################################################
+//            // ########################test: example from script @ todo: DELETE
+//            int ascii_example[256] = { 0 };
+//            string L = "aooooaaiioaeieeii";
+//            int *R_example = new int[L.length()];
+//            string alphabet_example;
+//            vector<int> frequencies_example;
+//
+//            getUsedSymbolsAndFrequencies(ascii_example, L,alphabet_example,frequencies_example);
+//
+//            cout << "Move_to_front \nalphabet example: " << alphabet_example
+//                            << endl;
+//            printVector(frequencies_example);
+//            moveToFront(alphabet_example, L, R_example);
+//            cout << "R: " << endl;
+//            printIntArray(R_example, 17);
+//            // ###############################################################
+            
             /* Huffman coding */
             //@ TODO: uncomment
-            //node *nodes_array = new node [2*alphabet.length()-1];  //binary trees have 2N-1 nodes by N leafs
-            //getHuffmanTree(alphabet,frequencies,nodes_array);
-//            string *huff_codes = new string[alphabet.length()];
-//            getBitCodesHuffmanTree(alphabet,nodes_array, huff_codes);
-//            string HuffmanCode; // to store the bit code derive from R
-//            deriveHuffmanCodeFromR(huff_codes,R,bwt.length(),HuffmanCode);
+            node *nodes_array = new node [2*alphabet.length()-1];  //binary trees have 2N-1 nodes by N leafs
+            getHuffmanTree(alphabet,frequencies,nodes_array);
+            string *bit_codes = new string[alphabet.length()];
+            getBitCodesHuffmanTree(alphabet,nodes_array, bit_codes);
+            string HuffmanCode; // to store the bit code derive from R
+            deriveHuffmanCodeFromR(bit_codes,R,bwt.length(),HuffmanCode);
             
+            writeCompressedOutputfile(alphabet, bit_codes, HuffmanCode,seq_name);
             // test
-            node *nodes_example = new node [2*alphabet_example.length()-1];  //binary trees have 2N-1 nodes by N leafs
-            getHuffmanTree(alphabet_example,frequencies_example,nodes_example);
-            string *bit_codes = new string[alphabet_example.length()];
-            getBitCodesHuffmanTree(alphabet_example,nodes_example, bit_codes);
-                 for (int unsigned i = 0; i < alphabet_example.length(); i++) 
-                        cout<<"path for i: "<<i<<" "<<bit_codes[i]<<endl;
-
-            string HuffmanCode_example;
-            deriveHuffmanCodeFromR(bit_codes,R_example,17,HuffmanCode_example);
-            cout<<"HuffmanCode: "<<HuffmanCode_example<<endl;
+//            node *nodes_example = new node [2*alphabet_example.length()-1];  //binary trees have 2N-1 nodes by N leafs
+//            getHuffmanTree(alphabet_example,frequencies_example,nodes_example);
+//            string *bit_codes = new string[alphabet_example.length()];
+//            getBitCodesHuffmanTree(alphabet_example,nodes_example, bit_codes);
+//                 for (int unsigned i = 0; i < alphabet_example.length(); i++) 
+//                        cout<<"path for i: "<<i<<" "<<bit_codes[i]<<endl;
+//
+//            string HuffmanCode_example;
+//            deriveHuffmanCodeFromR(bit_codes,R_example,17,HuffmanCode_example);
+//            cout<<"HuffmanCode: "<<HuffmanCode_example<<endl;
             
             
             //writeUncompressedOutputfile(seq_name, sequence, 80);
-            writeCompressedOutputfile(alphabet_example, bit_codes, HuffmanCode_example,seq_name);
             
-            map<string,int> probe;
-            vector<int> R_probe;
-            int max_bit_length;
-            createMapOfBitcodes(bit_codes,alphabet_example,probe,max_bit_length);
-            
-            cout<<"map size: "<<probe.size()<<endl;
-            deriveRFromHuffmanCode(probe,HuffmanCode_example,max_bit_length,R_probe);
-            cout<<"R probe size: "<<R_probe.size()<<endl;
-            printVector(R_probe);
+//            map<string,int> probe;
+//            vector<int> R_probe;
+//            int max_bit_length;
+//            createMapOfBitcodes(bit_codes,alphabet_example,probe,max_bit_length);
+//            
+//            cout<<"map size: "<<probe.size()<<endl;
+//            deriveRFromHuffmanCode(probe,HuffmanCode_example,max_bit_length,R_probe);
+//            cout<<"R probe size: "<<R_probe.size()<<endl;
+//            printVector(R_probe);
 //            delete []R; @todo: to be uncomment at the end
 //            delete []nodes_array;
 //            delete []huff_codes;
-     
+//            string path="outputlie_c";
+//            string a,seq,hffy;
+//            map<string,int> t;
+//     readCompressedFile(path, a,seq,t,hffy);
+//     cout<<"alphabet: "<<a<<"\n"<<"name: "<<seq<<endl;
+//     cout<<"huffy: "<<hffy<<endl;
+//     cout<<"map "<<t.size()<<endl;
+//     cout<<"map content "<<t["01"]<<endl;
+//     cout<<"map content "<<t["00"]<<endl;
+//     cout<<"map content "<<t["10"]<<endl;
+//     cout<<"map content "<<t["11"]<<endl;
 
     } else if (mode == 'x') {
 		/* mode x */
