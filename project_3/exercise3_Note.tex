@@ -93,8 +93,36 @@ Skew7 from seqAn and algorithm as in script. Nothing special therefore only ment
 \subsubsection{Huffman Code -> R Decoding}
 short description 2-3 sentences TBD by Kurt, may be unnecessary.
 \subsubsection{L-to-F-Mapping aka BWT to Original Text Decoding}
+This is the last reversion step to create the original text. We are given the BWT representation of the original text
+from the decoding move-to-front step. So basically it's a mutated order of the original text. \\\\
+The decoding step of our program makes use of the core obersation mentioned in the lecture script - observation 9. The
+observation states that the RELATIVE order of two cyclic shifts ending with the same character is preserved. In other
+words:
+THe character in 'L' from the last cyclic shift is appearing are the character in 'F' in the next shift. Following this
+fact, we can say that a sequence of the same character in the given 'L' is the same sequence of this character in 'F',
+only starting at different points. Using those observations what we are really doing is: 
+\begin{itemize}
+    \item For every character in the alphabet count the number of character lexicographically smaller than the character
+    appearing in 'L'.
+    \item For every character in the alphabet we also count the number of its occurrences in 'L'.
+    \item Both previously mentioned values are stored in a list called 'C'
+    \item As a second step the list 'Occ' contains for a certain position in 'L' the number of occurrences of each
+    character of the alphabet up to that position.
+    \item Having both lists, the 'LF' function can be calculated like this: LF(i) = C(L[i]) + Occ(L[i],i)
+\end{itemize}
+The method for this decoding step is called 'lfMapping' in our code. Unfornuately we weren't able to complete the
+implementation of this method. This is what's missing for us to complete the 'x' mode and decode everything. The
+implementation - so far - is given in the code.
 \subsubsection{Move-to-Front Decoding}
-
+This is the reversion step from the move-to-front encoding. The goal is to get the BWT representation of the original
+text, given the encoded sequence of integers. Also given from the stored file is the alphabet of which the BWT and the
+original text consisted of. \\\\
+In principle the reversion is the same core procedure as the encoding step. We are using the sequence of integers -
+denoted as 'R' in the lecture script - which contains the spots of the alphabet to be taken. Having one spot of the
+alphbet we pick that one and move the char to the sequence of chars to be created. This new sequence is our developing
+decoded 'L' or the BWT sequence. Afterwards we move the selected char to the front of the alphabet sequence - like in
+the encoding step - and move one position to the right in our given integer stream. Done. \\\\
+In our code this decoding method is called 'moveToFrontDecoding'.
 % #######################################################################################
 \section{Results/Observations}
 \subsection*{Comparison of the compression rate}
